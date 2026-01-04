@@ -27,9 +27,19 @@
         DialogHeader,
         DialogTitle,
     } from "$lib/components/ui/dialog";
-    import { File, Folder, CornerLeftUp, ChevronLeft } from "lucide-svelte";
+    import DockerConfigDialog from "./DockerConfigDialog.svelte";
+    import DockerBuildDialog from "./DockerBuildDialog.svelte";
+    import {
+        File,
+        Folder,
+        CornerLeftUp,
+        ChevronLeft,
+        Settings,
+        Hammer,
+    } from "lucide-svelte";
     import { Badge } from "$lib/components/ui/badge";
     import { t } from "svelte-i18n";
+    import { toast } from "svelte-sonner";
 
     let { path, onback } = $props<{ path: string; onback: () => void }>();
 
@@ -51,6 +61,13 @@
         is_dir: boolean;
     }
 
+    interface DockerImage {
+        id: string;
+        tags: string[];
+        created: number;
+        size: number;
+    }
+
     let commits = $state<CommitInfo[]>([]);
     let fileStatuses = $state<FileStatus[]>([]);
     let loading = $state(false);
@@ -62,6 +79,14 @@
     let fileContent = $state("");
     let loadingFile = $state(false);
     let viewingFileName = $state("");
+
+    // Docker State
+    let hasDockerfile = $state(false);
+    let dockerImageName = $state("");
+    let configOpen = $state(false);
+    let buildOpen = $state(false);
+    let images = $state<DockerImage[]>([]);
+    let loadingImages = $state(false);
 
     async function loadData() {
         loading = true;
@@ -87,10 +112,34 @@
 
             // Load Files
             await loadFiles(path);
+
+            // Load Docker Config
+            const savedName = localStorage.getItem(`docker_image_${path}`);
+            if (savedName) {
+                dockerImageName = savedName;
+                loadImages();
+            }
         } catch (e) {
             console.error(e);
         } finally {
             loading = false;
+        }
+    }
+
+    async function loadImages() {
+        if (!dockerImageName) return;
+        loadingImages = true;
+        try {
+            const res = await fetch(
+                `http://localhost:3000/api/docker/tags?image=${dockerImageName}`,
+            );
+            if (res.ok) {
+                images = await res.json();
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            loadingImages = false;
         }
     }
 
@@ -105,6 +154,12 @@
             });
             if (res.ok) {
                 files = await res.json();
+                // Check if Dockerfile exists in root
+                if (dirPath === path) {
+                    hasDockerfile = files.some(
+                        (f) => !f.is_dir && f.name === "Dockerfile",
+                    );
+                }
             }
         } catch (e) {
             console.error(e);
@@ -160,6 +215,13 @@
         return "/" + relative;
     }
 
+    // Save image name when it changes
+    $effect(() => {
+        if (path && dockerImageName) {
+            localStorage.setItem(`docker_image_${path}`, dockerImageName);
+        }
+    });
+
     $effect(() => {
         // Reset currentPath when root path changes
         if (path) {
@@ -170,13 +232,53 @@
 </script>
 
 <div class="space-y-4">
-    <div class="flex items-center gap-4">
-        <Button variant="outline" size="icon" onclick={onback}>
-            <ChevronLeft size={20} />
-        </Button>
-        <div class="flex flex-col">
-            <h2 class="text-2xl font-bold">{getFolderName(path)}</h2>
-            <span class="text-xs text-muted-foreground">{path}</span>
+    <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <Button variant="outline" size="icon" onclick={onback}>
+                <ChevronLeft size={20} />
+            </Button>
+            <div class="flex flex-col">
+                <h2 class="text-2xl font-bold">{getFolderName(path)}</h2>
+                <span class="text-xs text-muted-foreground">{path}</span>
+            </div>
+        </div>
+        <div>
+            {#if hasDockerfile}
+                {#if !dockerImageName}
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onclick={() => (configOpen = true)}
+                    >
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">🐳</span>
+                            <span>{$t("docker.action.configure")}</span>
+                            <Settings class="h-4 w-4" />
+                        </div>
+                    </Button>
+                {:else}
+                    <div class="flex gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onclick={() => (configOpen = true)}
+                        >
+                            <Settings class="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="default"
+                            size="sm"
+                            onclick={() => (buildOpen = true)}
+                        >
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">🐳</span>
+                                <span>{$t("docker.action.build")}</span>
+                                <Hammer class="h-4 w-4" />
+                            </div>
+                        </Button>
+                    </div>
+                {/if}
+            {/if}
         </div>
     </div>
 
@@ -191,6 +293,11 @@
             <TabsTrigger value="log"
                 >{$t("directory.detail.commit_history")}</TabsTrigger
             >
+            {#if hasDockerfile && dockerImageName}
+                <TabsTrigger value="images"
+                    >{$t("docker.tabs.images")}</TabsTrigger
+                >
+            {/if}
         </TabsList>
 
         <TabsContent value="files">
@@ -349,6 +456,96 @@
                 </CardContent>
             </Card>
         </TabsContent>
+
+        <TabsContent value="images">
+            <Card>
+                <CardHeader>
+                    <div class="flex items-center justify-between">
+                        <CardTitle>{$t("docker.images_panel.title")}</CardTitle>
+                        <Button variant="outline" size="sm" onclick={loadImages}
+                            >{$t("docker.images_panel.refresh")}</Button
+                        >
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    {#if loadingImages}
+                        <div>Loading...</div>
+                    {:else if images.length === 0}
+                        <div class="text-muted-foreground">
+                            {$t("docker.images_panel.no_images_found", {
+                                name: dockerImageName,
+                            })}
+                        </div>
+                    {:else}
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead
+                                        >{$t(
+                                            "docker.images_panel.table.tag",
+                                        )}</TableHead
+                                    >
+                                    <TableHead
+                                        >{$t(
+                                            "docker.images_panel.table.id",
+                                        )}</TableHead
+                                    >
+                                    <TableHead
+                                        >{$t(
+                                            "docker.images_panel.table.size",
+                                        )}</TableHead
+                                    >
+                                    <TableHead
+                                        >{$t(
+                                            "docker.images_panel.table.created",
+                                        )}</TableHead
+                                    >
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {#each images as image}
+                                    <TableRow>
+                                        <TableCell class="font-medium">
+                                            <div class="flex flex-wrap gap-1">
+                                                {#each image.tags as tag}
+                                                    {@const version = tag
+                                                        .split(":")
+                                                        .pop()}
+                                                    <Badge
+                                                        variant="outline"
+                                                        class={version ===
+                                                        "latest"
+                                                            ? "bg-green-100 text-green-800 hover:bg-green-200 border-green-200"
+                                                            : ""}
+                                                    >
+                                                        {version}
+                                                    </Badge>
+                                                {/each}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell class="font-mono text-xs"
+                                            >{image.id}</TableCell
+                                        >
+                                        <TableCell
+                                            >{(
+                                                image.size /
+                                                1024 /
+                                                1024
+                                            ).toFixed(2)} MB</TableCell
+                                        >
+                                        <TableCell
+                                            >{new Date(
+                                                image.created * 1000,
+                                            ).toLocaleString()}</TableCell
+                                        >
+                                    </TableRow>
+                                {/each}
+                            </TableBody>
+                        </Table>
+                    {/if}
+                </CardContent>
+            </Card>
+        </TabsContent>
     </Tabs>
 
     <Dialog open={!!viewingFile} onOpenChange={handleDialogChange}>
@@ -367,4 +564,15 @@
             </div>
         </DialogContent>
     </Dialog>
+
+    <DockerConfigDialog
+        bind:open={configOpen}
+        bind:imageName={dockerImageName}
+    />
+    <DockerBuildDialog
+        bind:open={buildOpen}
+        imageName={dockerImageName}
+        {path}
+        onSuccess={loadImages}
+    />
 </div>

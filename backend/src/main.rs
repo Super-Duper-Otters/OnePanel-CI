@@ -43,7 +43,7 @@ use state::AppState;
         handlers::docker::get_info,
     ),
     components(
-        schemas(CreateDirectoryRequest, DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, ReadFileRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest, CreateServerRequest, ServerResponse, DashboardResponse, OsInfo, Server, Repository, DockerInfo)
+        schemas(CreateDirectoryRequest, DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, ReadFileRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest, CreateServerRequest, ServerResponse, DashboardResponse, OsInfo, Server, Repository, DockerInfo, docker::DockerImage)
     ),
     tags(
         (name = "directories", description = "Directory management endpoints"),
@@ -102,6 +102,11 @@ async fn main() {
             get(handlers::server::get_server_status),
         )
         .route("/api/docker/info", get(handlers::docker::get_info))
+        .route("/api/docker/tags", get(handlers::docker::list_tags))
+        .route(
+            "/api/docker/build",
+            axum::routing::post(handlers::docker::build_image),
+        )
         .merge(Scalar::with_url("/scalar", ApiDoc::openapi()))
         .layer(
             CorsLayer::new()

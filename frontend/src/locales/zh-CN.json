@@ -65,7 +65,47 @@
         "refresh": "刷新",
         "status": "状态",
         "containers": "容器",
-        "images": "镜像"
+        "images": "镜像",
+        "action": {
+            "configure": "配置 Docker",
+            "build": "构建镜像"
+        },
+        "tabs": {
+            "images": "镜像列表"
+        },
+        "images_panel": {
+            "title": "Docker 镜像",
+            "refresh": "刷新",
+            "no_images_found": "未找到镜像 {name}",
+            "table": {
+                "tag": "标签",
+                "id": "镜像 ID",
+                "size": "大小",
+                "created": "创建时间"
+            }
+        },
+        "config": {
+            "title": "Docker 配置",
+            "name_required": "请输入镜像名称",
+            "saved": "镜像名称已保存",
+            "image_name_label": "镜像名称",
+            "placeholder": "例如: my-app"
+        },
+        "build": {
+            "title": "构建 Docker 镜像",
+            "version_required": "请输入版本号",
+            "version_exists": "版本 {version} 已存在，请选择新版本。",
+            "success": "构建成功: {image}:{version}",
+            "failed": "构建失败: {error}",
+            "request_failed": "构建请求失败",
+            "image_label": "镜像",
+            "path_label": "路径",
+            "version_label": "版本",
+            "checking_tags": "正在检查现有标签...",
+            "existing_versions": "现有版本",
+            "building": "构建中...",
+            "action": "构建并打标签"
+        }
     },
     "servers": {
         "dashboard_title": "服务器面板",

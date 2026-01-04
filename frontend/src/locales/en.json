@@ -65,7 +65,47 @@
         "refresh": "Refresh",
         "status": "Status",
         "containers": "Containers",
-        "images": "Images"
+        "images": "Images",
+        "action": {
+            "configure": "Configure Docker",
+            "build": "Build Image"
+        },
+        "tabs": {
+            "images": "Images"
+        },
+        "images_panel": {
+            "title": "Docker Images",
+            "refresh": "Refresh",
+            "no_images_found": "No images found for {name}",
+            "table": {
+                "tag": "Tag",
+                "id": "Image ID",
+                "size": "Size",
+                "created": "Created"
+            }
+        },
+        "config": {
+            "title": "Docker Configuration",
+            "name_required": "Image name is required",
+            "saved": "Image name saved",
+            "image_name_label": "Image Name",
+            "placeholder": "e.g. my-app"
+        },
+        "build": {
+            "title": "Build Docker Image",
+            "version_required": "Version is required",
+            "version_exists": "Version {version} already exists. Please choose a new version.",
+            "success": "Build successful: {image}:{version}",
+            "failed": "Build failed: {error}",
+            "request_failed": "Build request failed",
+            "image_label": "Image",
+            "path_label": "Path",
+            "version_label": "Version",
+            "checking_tags": "Checking existing tags...",
+            "existing_versions": "Existing versions",
+            "building": "Building...",
+            "action": "Build & Tag"
+        }
     },
     "servers": {
         "dashboard_title": "Server Dashboard",
