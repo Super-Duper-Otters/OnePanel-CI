@@ -14,6 +14,25 @@ pub struct Server {
     // created_at is strictly DB managed for now, or fetch if needed
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow, ToSchema)]
+pub struct Repository {
+    pub id: i64,
+    pub path: String,
+    pub name: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, ToSchema)]
+pub struct CreateDirectoryRequest {
+    pub path: String,
+}
+
+#[derive(Debug, Clone, Serialize, ToSchema)]
+pub struct DirectoryResponse {
+    pub path: String,
+    pub git_status: Option<crate::git::GitStatus>,
+    pub error: Option<String>,
+}
+
 #[derive(Debug, Clone, Deserialize, ToSchema)]
 pub struct CreateServerRequest {
     pub name: String,

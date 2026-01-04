@@ -16,16 +16,18 @@ mod state;
 use fs::{FileEntry, ListRequest, ScanRequest};
 use git::{CommitInfo, FileStatus, GitStatus};
 use handlers::git::{GitLogRequest, GitStatusRequest};
-use handlers::*;
-use models::{CreateServerRequest, DashboardResponse, OsInfo, Server, ServerResponse};
+use models::{
+    CreateDirectoryRequest, CreateServerRequest, DashboardResponse, DirectoryResponse, OsInfo,
+    Repository, Server, ServerResponse,
+};
 use state::AppState;
 
 #[derive(OpenApi)]
 #[openapi(
     paths(
-        handlers::list_directories,
-        handlers::add_directory,
-        handlers::remove_directory,
+        handlers::repository::list_repositories,
+        handlers::repository::add_repository,
+        handlers::repository::remove_repository,
         handlers::fs::list_directory,
         handlers::fs::scan_directory,
         handlers::git::get_git_log,
@@ -34,9 +36,10 @@ use state::AppState;
         handlers::server::add_server,
         handlers::server::delete_server,
         handlers::server::get_server_status,
+        handlers::server::update_server,
     ),
     components(
-        schemas(handlers::CreateDirectoryRequest, handlers::DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest, CreateServerRequest, ServerResponse, DashboardResponse, OsInfo, Server)
+        schemas(CreateDirectoryRequest, DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest, CreateServerRequest, ServerResponse, DashboardResponse, OsInfo, Server, Repository)
     ),
     tags(
         (name = "directories", description = "Directory management endpoints"),
@@ -59,9 +62,9 @@ async fn main() {
     let app = Router::new()
         .route(
             "/api/directories",
-            get(list_directories)
-                .post(add_directory)
-                .delete(remove_directory),
+            get(handlers::repository::list_repositories)
+                .post(handlers::repository::add_repository)
+                .delete(handlers::repository::remove_repository),
         )
         .route(
             "/api/fs/list",

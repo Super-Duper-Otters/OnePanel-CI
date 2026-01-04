@@ -37,8 +37,16 @@ pub fn get_repo_status(path: &str) -> Result<GitStatus, String> {
     };
 
     // Check if clean (simplified check for modified files)
-    let statuses = repo.statuses(None).map_err(|e| e.to_string())?;
+    let mut opts = git2::StatusOptions::new();
+    opts.include_untracked(true);
+
+    let statuses = repo.statuses(Some(&mut opts)).map_err(|e| e.to_string())?;
+
     let is_clean = statuses.is_empty();
+
+    if !is_clean {
+        // In clean mode, we don't print.
+    }
 
     Ok(GitStatus {
         path: path.to_string(),

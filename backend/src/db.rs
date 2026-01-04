@@ -27,6 +27,12 @@ pub async fn init_db() -> Result<DbPool, sqlx::Error> {
             api_key TEXT NOT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
+        CREATE TABLE IF NOT EXISTS repositories (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            path TEXT NOT NULL UNIQUE,
+            name TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
         "#,
     )
     .execute(&pool)
