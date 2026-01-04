@@ -16,6 +16,7 @@
   } from "$lib/components/ui/tabs";
   import DirectoryPicker from "./DirectoryPicker.svelte";
   import { t } from "svelte-i18n";
+  import { toast } from "svelte-sonner";
 
   let { onadded } = $props<{ onadded?: () => void }>();
   let path = $state("");
@@ -38,11 +39,11 @@
         onadded?.(); // Notify parent to refresh
       } else {
         console.error("Failed to add directory: " + pathToAdd);
-        alert($t("directory.add_failed"));
+        toast.error($t("directory.add_failed"));
       }
     } catch (e) {
       console.error(e);
-      alert($t("directory.add_error"));
+      toast.error($t("directory.add_error"));
     }
   }
 
@@ -71,7 +72,7 @@
           await addDirectory(repo);
           addedCount++;
         }
-        alert(
+        toast.success(
           $t("directory.scan_success", {
             values: { count: addedCount, path: rootPath },
           }),
@@ -80,7 +81,7 @@
       }
     } catch (e) {
       console.error(e);
-      alert($t("directory.scan_failed"));
+      toast.error($t("directory.scan_failed"));
     } finally {
       scanning = false;
     }

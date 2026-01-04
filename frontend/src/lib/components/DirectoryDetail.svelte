@@ -73,6 +73,10 @@
     onMount(() => {
         loadData();
     });
+    function getFolderName(path: string) {
+        const normalized = path.replace(/\\/g, "/");
+        return normalized.split("/").pop() || path;
+    }
 </script>
 
 <div class="space-y-4">
@@ -80,7 +84,10 @@
         <Button variant="outline" size="icon" onclick={onback}>
             <ChevronLeft size={20} />
         </Button>
-        <h2 class="text-2xl font-bold truncate">{path}</h2>
+        <div class="flex flex-col">
+            <h2 class="text-2xl font-bold">{getFolderName(path)}</h2>
+            <span class="text-xs text-muted-foreground">{path}</span>
+        </div>
     </div>
 
     <Tabs value="status" class="w-full">

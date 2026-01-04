@@ -62,6 +62,12 @@
     refreshTrigger;
     fetchDirectories();
   });
+
+  function getFolderName(path: string) {
+    // Handle both forward and backward slashes
+    const normalized = path.replace(/\\/g, "/");
+    return normalized.split("/").pop() || path;
+  }
 </script>
 
 <Table>
@@ -78,10 +84,17 @@
     {#each directories as dir}
       <TableRow>
         <TableCell
-          class="font-medium cursor-pointer hover:underline text-blue-600"
+          class="cursor-pointer hover:bg-muted/50 transition-colors"
           onclick={() => onselect?.(dir.path)}
         >
-          {dir.path}
+          <div class="flex flex-col">
+            <span class="font-bold text-base text-primary hover:underline">
+              {getFolderName(dir.path)}
+            </span>
+            <span class="text-xs text-muted-foreground">
+              {dir.path}
+            </span>
+          </div>
         </TableCell>
         <TableCell>{dir.git_status?.branch || "-"}</TableCell>
         <TableCell>

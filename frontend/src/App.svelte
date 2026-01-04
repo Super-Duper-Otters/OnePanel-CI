@@ -1,6 +1,7 @@
 <script lang="ts">
   import { locale, t, isLoading } from "svelte-i18n";
   import { Button } from "$lib/components/ui/button";
+  import { Toaster } from "$lib/components/ui/sonner";
   import DirectoryList from "$lib/components/DirectoryList.svelte";
   import AddDirectory from "$lib/components/AddDirectory.svelte";
   import DirectoryDetail from "$lib/components/DirectoryDetail.svelte";
@@ -39,6 +40,7 @@
 {#if $isLoading}
   <div class="flex items-center justify-center min-h-screen">Loading...</div>
 {:else}
+  <Toaster />
   <div class="container mx-auto py-8">
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-3xl font-bold">{$t("app.title")}</h1>
