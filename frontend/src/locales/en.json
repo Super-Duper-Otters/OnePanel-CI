@@ -37,7 +37,8 @@
             "date": "Date",
             "file": "File",
             "status": "Status",
-            "no_changes": "No changed files"
+            "no_changes": "No changed files",
+            "files": "Files"
         }
     },
     "settings": {

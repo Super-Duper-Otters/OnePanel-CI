@@ -21,6 +21,19 @@ pub struct ScanRequest {
     pub path: String,
 }
 
+#[derive(Serialize, Deserialize, ToSchema, Debug)]
+pub struct ReadFileRequest {
+    pub path: String,
+}
+
+pub fn read_file(path_str: &str) -> Result<String, String> {
+    let path = PathBuf::from(path_str);
+    if !path.exists() {
+        return Err("File does not exist".to_string());
+    }
+    fs::read_to_string(path).map_err(|e| e.to_string())
+}
+
 pub fn list_directory(path_str: Option<String>) -> Result<Vec<FileEntry>, String> {
     let path = match path_str {
         Some(p) => PathBuf::from(p),

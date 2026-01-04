@@ -13,7 +13,7 @@ mod models;
 mod onepanel;
 mod state;
 
-use fs::{FileEntry, ListRequest, ScanRequest};
+use fs::{FileEntry, ListRequest, ReadFileRequest, ScanRequest};
 use git::{CommitInfo, FileStatus, GitStatus};
 use handlers::git::{GitLogRequest, GitStatusRequest};
 use models::{
@@ -30,6 +30,7 @@ use state::AppState;
         handlers::repository::remove_repository,
         handlers::fs::list_directory,
         handlers::fs::scan_directory,
+        handlers::fs::read_file,
         handlers::git::get_git_log,
         handlers::git::get_git_status,
         handlers::server::list_servers,
@@ -39,7 +40,7 @@ use state::AppState;
         handlers::server::update_server,
     ),
     components(
-        schemas(CreateDirectoryRequest, DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest, CreateServerRequest, ServerResponse, DashboardResponse, OsInfo, Server, Repository)
+        schemas(CreateDirectoryRequest, DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, ReadFileRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest, CreateServerRequest, ServerResponse, DashboardResponse, OsInfo, Server, Repository)
     ),
     tags(
         (name = "directories", description = "Directory management endpoints"),
@@ -74,6 +75,7 @@ async fn main() {
             "/api/fs/scan",
             axum::routing::post(handlers::fs::scan_directory),
         )
+        .route("/api/fs/read", axum::routing::post(handlers::fs::read_file))
         .route(
             "/api/git/log",
             axum::routing::post(handlers::git::get_git_log),

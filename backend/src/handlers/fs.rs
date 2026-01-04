@@ -28,3 +28,18 @@ pub async fn scan_directory(Json(payload): Json<ScanRequest>) -> impl IntoRespon
     let repos = fs::scan_for_git_repos(&payload.path);
     (StatusCode::OK, Json(repos)).into_response()
 }
+#[utoipa::path(
+    post,
+    path = "/api/fs/read",
+    request_body = crate::fs::ReadFileRequest,
+    responses(
+        (status = 200, description = "Read file content", body = String),
+        (status = 400, description = "File not found or error")
+    )
+)]
+pub async fn read_file(Json(payload): Json<crate::fs::ReadFileRequest>) -> impl IntoResponse {
+    match fs::read_file(&payload.path) {
+        Ok(content) => (StatusCode::OK, content).into_response(),
+        Err(e) => (StatusCode::BAD_REQUEST, e).into_response(),
+    }
+}

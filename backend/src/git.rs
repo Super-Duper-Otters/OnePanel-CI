@@ -103,11 +103,24 @@ pub fn get_commit_log(path: &str, limit: usize) -> Result<Vec<CommitInfo>, Strin
 
 pub fn get_detailed_status(path: &str) -> Result<Vec<FileStatus>, String> {
     let repo = Repository::open(path).map_err(|e| e.to_string())?;
-    let statuses = repo.statuses(None).map_err(|e| e.to_string())?;
+
+    let mut opts = git2::StatusOptions::new();
+    opts.include_untracked(true)
+        .include_ignored(false)
+        .renames_head_to_index(true)
+        .renames_index_to_workdir(true);
+
+    let statuses = repo.statuses(Some(&mut opts)).map_err(|e| e.to_string())?;
 
     let mut result = Vec::new();
     for entry in statuses.iter() {
         let status = entry.status();
+
+        // Double check to skip ignored
+        if status.is_ignored() {
+            continue;
+        }
+
         let status_str = if status.is_index_new() || status.is_wt_new() {
             "New"
         } else if status.is_index_modified() || status.is_wt_modified() {
@@ -119,6 +132,8 @@ pub fn get_detailed_status(path: &str) -> Result<Vec<FileStatus>, String> {
         } else if status.is_conflicted() {
             "Conflicted"
         } else {
+            // If we still get unknown statuses that shouldn't happen with ignored=false, log or skip?
+            // "Unknown" is fine for now but hopefully won't appear.
             "Unknown"
         };
 

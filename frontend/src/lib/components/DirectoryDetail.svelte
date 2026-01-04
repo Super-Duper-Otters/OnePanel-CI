@@ -21,7 +21,14 @@
         TabsList,
         TabsTrigger,
     } from "$lib/components/ui/tabs";
-    import { ChevronLeft } from "lucide-svelte";
+    import {
+        Dialog,
+        DialogContent,
+        DialogHeader,
+        DialogTitle,
+    } from "$lib/components/ui/dialog";
+    import { File, Folder, CornerLeftUp, ChevronLeft } from "lucide-svelte";
+    import { Badge } from "$lib/components/ui/badge";
     import { t } from "svelte-i18n";
 
     let { path, onback } = $props<{ path: string; onback: () => void }>();
@@ -38,9 +45,23 @@
         status: string;
     }
 
+    interface FileEntry {
+        name: string;
+        path: string;
+        is_dir: boolean;
+    }
+
     let commits = $state<CommitInfo[]>([]);
     let fileStatuses = $state<FileStatus[]>([]);
     let loading = $state(false);
+
+    // File Browser State
+    let currentPath = $state(path);
+    let files = $state<FileEntry[]>([]);
+    let viewingFile = $state<string | null>(null);
+    let fileContent = $state("");
+    let loadingFile = $state(false);
+    let viewingFileName = $state("");
 
     async function loadData() {
         loading = true;
@@ -63,6 +84,9 @@
                 },
             );
             if (statusRes.ok) fileStatuses = await statusRes.json();
+
+            // Load Files
+            await loadFiles(path);
         } catch (e) {
             console.error(e);
         } finally {
@@ -70,13 +94,65 @@
         }
     }
 
-    onMount(() => {
-        loadData();
-    });
+    async function loadFiles(dirPath: string) {
+        currentPath = dirPath;
+        try {
+            const res = await fetch("http://localhost:3000/api/fs/list", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ path: dirPath }),
+            });
+            if (res.ok) {
+                files = await res.json();
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async function handleFileClick(file: FileEntry) {
+        if (file.is_dir) {
+            if (file.name === "..") {
+                // Should "Up" logic be handled by list_directory return ".." or handled client side?
+                // Backend returns ".." entry for parent. So just load it.
+            }
+            loadFiles(file.path);
+        } else {
+            // View file
+            viewingFileName = file.name;
+            viewingFile = file.path;
+            loadingFile = true;
+            try {
+                const res = await fetch("http://localhost:3000/api/fs/read", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ path: file.path }),
+                });
+                if (res.ok) {
+                    fileContent = await res.text();
+                } else {
+                    fileContent = "Error reading file";
+                }
+            } catch (e) {
+                fileContent = "Error reading file: " + e;
+            } finally {
+                loadingFile = false;
+            }
+        }
+    }
+
     function getFolderName(path: string) {
         const normalized = path.replace(/\\/g, "/");
         return normalized.split("/").pop() || path;
     }
+
+    $effect(() => {
+        // Reset currentPath when root path changes
+        if (path) {
+            currentPath = path;
+            loadData();
+        }
+    });
 </script>
 
 <div class="space-y-4">
@@ -90,8 +166,11 @@
         </div>
     </div>
 
-    <Tabs value="status" class="w-full">
+    <Tabs value="files" class="w-full">
         <TabsList>
+            <TabsTrigger value="files"
+                >{$t("directory.detail.files") || "Files"}</TabsTrigger
+            >
             <TabsTrigger value="status"
                 >{$t("directory.detail.file_status")}</TabsTrigger
             >
@@ -99,6 +178,58 @@
                 >{$t("directory.detail.commit_history")}</TabsTrigger
             >
         </TabsList>
+
+        <TabsContent value="files">
+            <Card>
+                <CardHeader>
+                    <div class="flex items-center justify-between">
+                        <CardTitle>{currentPath}</CardTitle>
+                        {#if currentPath !== path}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onclick={() => loadFiles(path)}
+                            >
+                                Root
+                            </Button>
+                        {/if}
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead class="w-[50px]"></TableHead>
+                                <TableHead>Name</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {#each files as file}
+                                <TableRow
+                                    class="cursor-pointer hover:bg-muted/50"
+                                    onclick={() => handleFileClick(file)}
+                                >
+                                    <TableCell>
+                                        {#if file.is_dir}
+                                            <Folder
+                                                class="h-4 w-4 text-blue-500"
+                                            />
+                                        {:else}
+                                            <File
+                                                class="h-4 w-4 text-gray-500"
+                                            />
+                                        {/if}
+                                    </TableCell>
+                                    <TableCell class="font-medium">
+                                        {file.name}
+                                    </TableCell>
+                                </TableRow>
+                            {/each}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+        </TabsContent>
 
         <TabsContent value="status">
             <Card>
@@ -205,4 +336,24 @@
             </Card>
         </TabsContent>
     </Tabs>
+
+    <Dialog
+        open={!!viewingFile}
+        onOpenChange={(o: boolean) => !o && (viewingFile = null)}
+    >
+        <DialogContent class="max-w-4xl max-h-[80vh] flex flex-col">
+            <DialogHeader>
+                <DialogTitle>{viewingFileName}</DialogTitle>
+            </DialogHeader>
+            <div
+                class="flex-1 overflow-auto bg-muted/50 p-4 rounded-md border font-mono text-sm whitespace-pre"
+            >
+                {#if loadingFile}
+                    Loading...
+                {:else}
+                    {fileContent}
+                {/if}
+            </div>
+        </DialogContent>
+    </Dialog>
 </div>
