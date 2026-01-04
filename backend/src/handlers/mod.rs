@@ -4,6 +4,8 @@ use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
+pub mod fs;
+
 #[derive(Deserialize, ToSchema)]
 pub struct CreateDirectoryRequest {
     pub path: String,

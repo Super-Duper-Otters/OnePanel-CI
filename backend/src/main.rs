@@ -5,10 +5,12 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use utoipa::OpenApi;
 use utoipa_scalar::{Scalar, Servable};
 
+mod fs;
 mod git;
 mod handlers;
 mod state;
 
+use fs::{FileEntry, ListRequest, ScanRequest};
 use git::GitStatus;
 use handlers::*;
 use state::AppState;
@@ -19,12 +21,15 @@ use state::AppState;
         handlers::list_directories,
         handlers::add_directory,
         handlers::remove_directory,
+        handlers::fs::list_directory,
+        handlers::fs::scan_directory,
     ),
     components(
-        schemas(handlers::CreateDirectoryRequest, handlers::DirectoryResponse, GitStatus)
+        schemas(handlers::CreateDirectoryRequest, handlers::DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest)
     ),
     tags(
-        (name = "directories", description = "Directory management endpoints")
+        (name = "directories", description = "Directory management endpoints"),
+        (name = "fs", description = "File system endpoints")
     )
 )]
 struct ApiDoc;
@@ -43,6 +48,14 @@ async fn main() {
             get(list_directories)
                 .post(add_directory)
                 .delete(remove_directory),
+        )
+        .route(
+            "/api/fs/list",
+            axum::routing::post(handlers::fs::list_directory),
+        )
+        .route(
+            "/api/fs/scan",
+            axum::routing::post(handlers::fs::scan_directory),
         )
         .merge(Scalar::with_url("/scalar", ApiDoc::openapi()))
         .layer(
