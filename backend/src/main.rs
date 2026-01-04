@@ -101,6 +101,14 @@ async fn main() {
             "/api/servers/{id}/status",
             get(handlers::server::get_server_status),
         )
+        .route(
+            "/api/servers/{id}/proxy/{*path}",
+            axum::routing::any(handlers::server::proxy_request),
+        )
+        .route(
+            "/api/servers/{id}/docs",
+            get(handlers::server::serve_scalar_docs),
+        )
         .route("/api/docker/info", get(handlers::docker::get_info))
         .route("/api/docker/tags", get(handlers::docker::list_tags))
         .route(

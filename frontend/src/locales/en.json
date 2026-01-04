@@ -112,7 +112,8 @@
         "add_button": "Add Server",
         "add_server_title": "Add New Server",
         "name": "Name",
-        "no_servers": "No servers added. Add one to get started."
+        "no_servers": "No servers added. Add one to get started.",
+        "swagger": "API Documentation"
     },
     "picker": {
         "title": "Browse Directory",

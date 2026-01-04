@@ -9,7 +9,7 @@
     } from "$lib/components/ui/card";
     import { Badge } from "$lib/components/ui/badge";
     import { Button } from "$lib/components/ui/button";
-    import { Trash2, Edit } from "lucide-svelte";
+    import { Trash2, Edit, BookText } from "lucide-svelte";
     import { t } from "svelte-i18n";
 
     let { server, ondelete, onedit } = $props<{
@@ -73,6 +73,15 @@
             <CardDescription>{server.host}:{server.port}</CardDescription>
         </div>
         <div class="flex gap-1">
+            <Button
+                variant="ghost"
+                size="icon"
+                title={$t("servers.swagger") || "API Docs"}
+                onclick={() =>
+                    window.open(`/api/servers/${server.id}/docs`, "_blank")}
+            >
+                <BookText size={20} />
+            </Button>
             <Button variant="ghost" size="icon" onclick={() => onedit(server)}>
                 <Edit size={20} />
             </Button>

@@ -137,6 +137,7 @@ dependencies = [
  "chrono",
  "git2",
  "md5",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",

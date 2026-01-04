@@ -21,3 +21,4 @@ md5 = "0.8.0"
 reqwest = { version = "0.13.1", features = ["json"] }
 sqlx = { version = "0.8.6", features = ["sqlite", "runtime-tokio-native-tls"] }
 bollard = "0.18"
+regex = "1.12.2"
