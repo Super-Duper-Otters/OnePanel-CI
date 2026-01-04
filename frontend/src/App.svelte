@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import { locale, t, isLoading } from "svelte-i18n";
   import { Button } from "$lib/components/ui/button";
   import { Toaster } from "$lib/components/ui/sonner";
@@ -21,6 +22,25 @@
   let addRepoOpen = $state(false);
   let addServerOpen = $state(false);
   let currentTab = $state("repositories");
+
+  onMount(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    const path = params.get("path");
+    if (tab) currentTab = tab;
+    if (path) selectedPath = path;
+  });
+
+  $effect(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", currentTab);
+    if (selectedPath) {
+      url.searchParams.set("path", selectedPath);
+    } else {
+      url.searchParams.delete("path");
+    }
+    window.history.replaceState({}, "", url);
+  });
 
   // Repository list state
   let refreshTrigger = $state(0);
@@ -80,7 +100,7 @@
           >
         </TabsList>
         <div>
-          {#if currentTab !== "docker"}
+          {#if currentTab !== "docker" && (currentTab !== "repositories" || !selectedPath)}
             <Button onclick={onAdd}>
               <Plus class="mr-2 h-4 w-4" />
               {$t("directory.add_button")}
