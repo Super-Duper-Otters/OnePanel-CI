@@ -26,6 +26,18 @@
             "clean": "Clean",
             "dirty": "Dirty",
             "error": "Error"
+        },
+        "detail": {
+            "back": "Back",
+            "commit_history": "Commit History",
+            "file_status": "File Status",
+            "hash": "Hash",
+            "author": "Author",
+            "message": "Message",
+            "date": "Date",
+            "file": "File",
+            "status": "Status",
+            "no_changes": "No changed files"
         }
     },
     "picker": {

@@ -11,7 +11,8 @@ mod handlers;
 mod state;
 
 use fs::{FileEntry, ListRequest, ScanRequest};
-use git::GitStatus;
+use git::{CommitInfo, FileStatus, GitStatus};
+use handlers::git::{GitLogRequest, GitStatusRequest};
 use handlers::*;
 use state::AppState;
 
@@ -23,13 +24,16 @@ use state::AppState;
         handlers::remove_directory,
         handlers::fs::list_directory,
         handlers::fs::scan_directory,
+        handlers::git::get_git_log,
+        handlers::git::get_git_status,
     ),
     components(
-        schemas(handlers::CreateDirectoryRequest, handlers::DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest)
+        schemas(handlers::CreateDirectoryRequest, handlers::DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest)
     ),
     tags(
         (name = "directories", description = "Directory management endpoints"),
-        (name = "fs", description = "File system endpoints")
+        (name = "fs", description = "File system endpoints"),
+        (name = "git", description = "Git operations endpoints")
     )
 )]
 struct ApiDoc;
@@ -56,6 +60,14 @@ async fn main() {
         .route(
             "/api/fs/scan",
             axum::routing::post(handlers::fs::scan_directory),
+        )
+        .route(
+            "/api/git/log",
+            axum::routing::post(handlers::git::get_git_log),
+        )
+        .route(
+            "/api/git/status",
+            axum::routing::post(handlers::git::get_git_status),
         )
         .merge(Scalar::with_url("/scalar", ApiDoc::openapi()))
         .layer(

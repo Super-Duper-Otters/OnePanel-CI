@@ -11,8 +11,12 @@
   import { Button } from "$lib/components/ui/button";
   import { Badge } from "$lib/components/ui/badge";
   import { t } from "svelte-i18n";
+  import { Info } from "lucide-svelte";
 
-  let { refreshTrigger = 0 } = $props<{ refreshTrigger?: number }>();
+  let { refreshTrigger = 0, onselect } = $props<{
+    refreshTrigger?: number;
+    onselect?: (path: string) => void;
+  }>();
 
   interface GitStatus {
     path: string;
@@ -73,7 +77,12 @@
   <TableBody>
     {#each directories as dir}
       <TableRow>
-        <TableCell class="font-medium">{dir.path}</TableCell>
+        <TableCell
+          class="font-medium cursor-pointer hover:underline text-blue-600"
+          onclick={() => onselect?.(dir.path)}
+        >
+          {dir.path}
+        </TableCell>
         <TableCell>{dir.git_status?.branch || "-"}</TableCell>
         <TableCell>
           {#if dir.git_status?.last_commit_time}
@@ -96,12 +105,21 @@
           {/if}
         </TableCell>
         <TableCell>
-          <Button
-            variant="destructive"
-            size="sm"
-            onclick={() => removeDirectory(dir.path)}
-            >{$t("directory.remove")}</Button
-          >
+          <div class="flex gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onclick={() => onselect?.(dir.path)}
+            >
+              <Info size={16} />
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onclick={() => removeDirectory(dir.path)}
+              >{$t("directory.remove")}</Button
+            >
+          </div>
         </TableCell>
       </TableRow>
     {/each}

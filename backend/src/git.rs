@@ -48,3 +48,79 @@ pub fn get_repo_status(path: &str) -> Result<GitStatus, String> {
         is_clean,
     })
 }
+
+#[derive(Debug, Serialize, ToSchema, Clone)]
+pub struct CommitInfo {
+    pub hash: String,
+    pub author: String,
+    pub message: String,
+    pub date: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Serialize, ToSchema, Clone)]
+pub struct FileStatus {
+    pub path: String,
+    pub status: String,
+}
+
+pub fn get_commit_log(path: &str, limit: usize) -> Result<Vec<CommitInfo>, String> {
+    let repo = Repository::open(path).map_err(|e| e.to_string())?;
+    let mut revwalk = repo.revwalk().map_err(|e| e.to_string())?;
+
+    revwalk
+        .push_head()
+        .map_err(|_| "No head found".to_string())?;
+    revwalk
+        .set_sorting(git2::Sort::TIME)
+        .map_err(|e| e.to_string())?;
+
+    let mut commits = Vec::new();
+    for oid in revwalk.take(limit) {
+        let oid = oid.map_err(|e| e.to_string())?;
+        let commit = repo.find_commit(oid).map_err(|e| e.to_string())?;
+
+        let time_seconds = commit.time().seconds();
+        let datetime = Utc.timestamp_opt(time_seconds, 0).single();
+
+        commits.push(CommitInfo {
+            hash: oid.to_string(),
+            author: commit.author().name().unwrap_or("Unknown").to_string(),
+            message: commit.message().unwrap_or("").to_string(),
+            date: datetime,
+        });
+    }
+
+    Ok(commits)
+}
+
+pub fn get_detailed_status(path: &str) -> Result<Vec<FileStatus>, String> {
+    let repo = Repository::open(path).map_err(|e| e.to_string())?;
+    let statuses = repo.statuses(None).map_err(|e| e.to_string())?;
+
+    let mut result = Vec::new();
+    for entry in statuses.iter() {
+        let status = entry.status();
+        let status_str = if status.is_index_new() || status.is_wt_new() {
+            "New"
+        } else if status.is_index_modified() || status.is_wt_modified() {
+            "Modified"
+        } else if status.is_index_deleted() || status.is_wt_deleted() {
+            "Deleted"
+        } else if status.is_index_renamed() || status.is_wt_renamed() {
+            "Renamed"
+        } else if status.is_conflicted() {
+            "Conflicted"
+        } else {
+            "Unknown"
+        };
+
+        if let Some(path) = entry.path() {
+            result.push(FileStatus {
+                path: path.to_string(),
+                status: status_str.to_string(),
+            });
+        }
+    }
+
+    Ok(result)
+}

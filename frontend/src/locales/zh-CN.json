@@ -26,6 +26,18 @@
             "clean": "干净",
             "dirty": "未提交",
             "error": "错误"
+        },
+        "detail": {
+            "back": "返回",
+            "commit_history": "提交历史",
+            "file_status": "文件状态",
+            "hash": "哈希",
+            "author": "作者",
+            "message": "信息",
+            "date": "日期",
+            "file": "文件",
+            "status": "状态",
+            "no_changes": "无文件变更"
         }
     },
     "picker": {
