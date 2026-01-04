@@ -10,7 +10,7 @@ use axum::{http::StatusCode, response::IntoResponse, Json};
     )
 )]
 pub async fn list_directory(Json(payload): Json<ListRequest>) -> impl IntoResponse {
-    match fs::list_directory(payload.path) {
+    match fs::list_directory(payload.path, payload.root) {
         Ok(entries) => (StatusCode::OK, Json(entries)).into_response(),
         Err(e) => (StatusCode::BAD_REQUEST, e).into_response(),
     }

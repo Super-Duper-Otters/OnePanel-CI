@@ -100,7 +100,8 @@
             const res = await fetch("http://localhost:3000/api/fs/list", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ path: dirPath }),
+                // Use 'path' state which is the repo root
+                body: JSON.stringify({ path: dirPath, root: path }),
             });
             if (res.ok) {
                 files = await res.json();
@@ -146,6 +147,19 @@
         return normalized.split("/").pop() || path;
     }
 
+    function handleDialogChange(open: boolean) {
+        if (!open) viewingFile = null;
+    }
+
+    function getDisplayPath(current: string) {
+        if (current === path) {
+            return $t("directory.detail.root_dir");
+        }
+        // Get relative path
+        const relative = current.replace(path, "").replace(/^[\\/]+/, "");
+        return "/" + relative;
+    }
+
     $effect(() => {
         // Reset currentPath when root path changes
         if (path) {
@@ -183,14 +197,14 @@
             <Card>
                 <CardHeader>
                     <div class="flex items-center justify-between">
-                        <CardTitle>{currentPath}</CardTitle>
+                        <CardTitle>{getDisplayPath(currentPath)}</CardTitle>
                         {#if currentPath !== path}
                             <Button
                                 variant="outline"
                                 size="sm"
                                 onclick={() => loadFiles(path)}
                             >
-                                Root
+                                {$t("directory.detail.root_dir")}
                             </Button>
                         {/if}
                     </div>
@@ -337,10 +351,7 @@
         </TabsContent>
     </Tabs>
 
-    <Dialog
-        open={!!viewingFile}
-        onOpenChange={(o: boolean) => !o && (viewingFile = null)}
-    >
+    <Dialog open={!!viewingFile} onOpenChange={handleDialogChange}>
         <DialogContent class="max-w-4xl max-h-[80vh] flex flex-col">
             <DialogHeader>
                 <DialogTitle>{viewingFileName}</DialogTitle>

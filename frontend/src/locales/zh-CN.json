@@ -38,7 +38,8 @@
             "file": "文件",
             "status": "状态",
             "no_changes": "无文件变更",
-            "files": "文件列表"
+            "files": "文件列表",
+            "root_dir": "根目录"
         }
     },
     "settings": {

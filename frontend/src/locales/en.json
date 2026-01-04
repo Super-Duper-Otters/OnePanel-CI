@@ -38,7 +38,8 @@
             "file": "File",
             "status": "Status",
             "no_changes": "No changed files",
-            "files": "Files"
+            "files": "Files",
+            "root_dir": "Root Directory"
         }
     },
     "settings": {
