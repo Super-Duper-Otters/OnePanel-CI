@@ -2,11 +2,12 @@
   import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
   import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-  } from "$lib/components/ui/card";
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+  } from "$lib/components/ui/dialog";
   import {
     Tabs,
     TabsContent,
@@ -21,6 +22,7 @@
   let pickerOpen = $state(false);
   let scanResult = $state<string[]>([]);
   let scanning = $state(false);
+  let open = $state(false);
 
   async function addDirectory(pathToAdd: string) {
     if (!pathToAdd) return;
@@ -47,6 +49,7 @@
   async function handleManualAdd() {
     await addDirectory(path);
     path = "";
+    open = false; // Close dialog
   }
 
   async function handleScan(rootPath: string) {
@@ -73,6 +76,7 @@
             values: { count: addedCount, path: rootPath },
           }),
         );
+        open = false; // Close dialog
       }
     } catch (e) {
       console.error(e);
@@ -87,11 +91,14 @@
   }
 </script>
 
-<Card class="mb-4">
-  <CardHeader>
-    <CardTitle>{$t("directory.add_title")}</CardTitle>
-  </CardHeader>
-  <CardContent>
+<Dialog bind:open>
+  <DialogTrigger>
+    <Button>{$t("directory.add_title")}</Button>
+  </DialogTrigger>
+  <DialogContent class="sm:max-w-[600px]">
+    <DialogHeader>
+      <DialogTitle>{$t("directory.add_title")}</DialogTitle>
+    </DialogHeader>
     <Tabs value="manual" class="w-full">
       <TabsList class="grid w-full grid-cols-2 mb-4">
         <TabsTrigger value="manual">{$t("directory.manual_input")}</TabsTrigger>
@@ -123,5 +130,5 @@
         {/if}
       </TabsContent>
     </Tabs>
-  </CardContent>
-</Card>
+  </DialogContent>
+</Dialog>
