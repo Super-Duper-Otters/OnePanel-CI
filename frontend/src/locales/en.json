@@ -40,6 +40,30 @@
             "no_changes": "No changed files"
         }
     },
+    "settings": {
+        "title": "Settings",
+        "onepanel_config": "1Panel Configuration",
+        "host": "Host",
+        "port": "Port",
+        "api_key": "API Key",
+        "test_connection": "Test Connection",
+        "save": "Save",
+        "test_success": "Connection successful",
+        "test_failed": "Connection failed",
+        "save_success": "Settings saved",
+        "save_error": "Error saving settings"
+    },
+    "tabs": {
+        "repositories": "Repositories",
+        "servers": "Servers"
+    },
+    "servers": {
+        "dashboard_title": "Server Dashboard",
+        "add_button": "Add Server",
+        "add_server_title": "Add New Server",
+        "name": "Name",
+        "no_servers": "No servers added. Add one to get started."
+    },
     "picker": {
         "title": "Browse Directory",
         "current": "Current Directory",

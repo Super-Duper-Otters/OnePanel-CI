@@ -40,6 +40,30 @@
             "no_changes": "无文件变更"
         }
     },
+    "settings": {
+        "title": "设置",
+        "onepanel_config": "1Panel 配置",
+        "host": "主机地址",
+        "port": "端口",
+        "api_key": "API 密钥",
+        "test_connection": "测试连接",
+        "save": "保存",
+        "test_success": "连接成功",
+        "test_failed": "连接失败",
+        "save_success": "设置已保存",
+        "save_error": "保存设置失败"
+    },
+    "tabs": {
+        "repositories": "代码仓库",
+        "servers": "服务器"
+    },
+    "servers": {
+        "dashboard_title": "服务器面板",
+        "add_button": "添加服务器",
+        "add_server_title": "添加新服务器",
+        "name": "名称",
+        "no_servers": "暂无服务器，请添加。"
+    },
     "picker": {
         "title": "浏览目录",
         "current": "当前目录",

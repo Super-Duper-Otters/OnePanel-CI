@@ -5,15 +5,19 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use utoipa::OpenApi;
 use utoipa_scalar::{Scalar, Servable};
 
+mod db;
 mod fs;
 mod git;
 mod handlers;
+mod models;
+mod onepanel;
 mod state;
 
 use fs::{FileEntry, ListRequest, ScanRequest};
 use git::{CommitInfo, FileStatus, GitStatus};
 use handlers::git::{GitLogRequest, GitStatusRequest};
 use handlers::*;
+use models::{CreateServerRequest, DashboardResponse, OsInfo, Server, ServerResponse};
 use state::AppState;
 
 #[derive(OpenApi)]
@@ -26,14 +30,19 @@ use state::AppState;
         handlers::fs::scan_directory,
         handlers::git::get_git_log,
         handlers::git::get_git_status,
+        handlers::server::list_servers,
+        handlers::server::add_server,
+        handlers::server::delete_server,
+        handlers::server::get_server_status,
     ),
     components(
-        schemas(handlers::CreateDirectoryRequest, handlers::DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest)
+        schemas(handlers::CreateDirectoryRequest, handlers::DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest, CreateServerRequest, ServerResponse, DashboardResponse, OsInfo, Server)
     ),
     tags(
         (name = "directories", description = "Directory management endpoints"),
         (name = "fs", description = "File system endpoints"),
-        (name = "git", description = "Git operations endpoints")
+        (name = "git", description = "Git operations endpoints"),
+        (name = "servers", description = "Server management endpoints")
     )
 )]
 struct ApiDoc;
@@ -44,7 +53,8 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let state = AppState::new();
+    let db = db::init_db().await.unwrap();
+    let state = AppState::new(db);
 
     let app = Router::new()
         .route(
@@ -68,6 +78,19 @@ async fn main() {
         .route(
             "/api/git/status",
             axum::routing::post(handlers::git::get_git_status),
+        )
+        .route(
+            "/api/servers",
+            get(handlers::server::list_servers).post(handlers::server::add_server),
+        )
+        .route(
+            "/api/servers/{id}",
+            axum::routing::delete(handlers::server::delete_server)
+                .put(handlers::server::update_server),
+        )
+        .route(
+            "/api/servers/{id}/status",
+            get(handlers::server::get_server_status),
         )
         .merge(Scalar::with_url("/scalar", ApiDoc::openapi()))
         .layer(

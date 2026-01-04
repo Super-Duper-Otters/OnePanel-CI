@@ -1,12 +1,23 @@
 <script lang="ts">
+  import { locale, t, isLoading } from "svelte-i18n";
+  import { Button } from "$lib/components/ui/button";
   import DirectoryList from "$lib/components/DirectoryList.svelte";
   import AddDirectory from "$lib/components/AddDirectory.svelte";
   import DirectoryDetail from "$lib/components/DirectoryDetail.svelte";
-  import { locale, t, isLoading } from "svelte-i18n";
-  import { Button } from "$lib/components/ui/button";
+  import ServerList from "$lib/components/ServerList.svelte";
+  import {
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+  } from "$lib/components/ui/tabs";
+
+  import { Plus } from "lucide-svelte";
 
   let refreshTrigger = $state(0);
   let selectedPath = $state<string | null>(null);
+  let currentTab = $state("repositories");
+  let serverList = $state<any>(null);
 
   function handleAdded() {
     refreshTrigger++;
@@ -36,11 +47,41 @@
       </Button>
     </div>
 
-    {#if selectedPath}
-      <DirectoryDetail path={selectedPath} onback={handleBack} />
-    {:else}
-      <AddDirectory onadded={handleAdded} />
-      <DirectoryList {refreshTrigger} onselect={handleSelect} />
-    {/if}
+    <!-- @ts-ignore -->
+    <Tabs bind:value={currentTab} class="w-full">
+      <div class="flex items-center justify-between mb-4">
+        <TabsList>
+          <TabsTrigger value="repositories"
+            >{$t("tabs.repositories")}</TabsTrigger
+          >
+          <TabsTrigger value="servers">{$t("tabs.servers")}</TabsTrigger>
+        </TabsList>
+        <div>
+          {#if currentTab === "repositories"}
+            <AddDirectory onadded={handleAdded} />
+          {:else if currentTab === "servers"}
+            <Button onclick={() => serverList?.openAddDialog()}>
+              <Plus class="mr-2 h-4 w-4" />
+              {$t("servers.add_button")}
+            </Button>
+          {/if}
+        </div>
+      </div>
+
+      <TabsContent value="repositories">
+        {#if selectedPath}
+          <!-- @ts-ignore -->
+          <DirectoryDetail path={selectedPath} onback={handleBack} />
+        {:else}
+          <div class="space-y-4">
+            <DirectoryList {refreshTrigger} onselect={handleSelect} />
+          </div>
+        {/if}
+      </TabsContent>
+      <TabsContent value="servers">
+        <!-- @ts-ignore -->
+        <ServerList bind:this={serverList} />
+      </TabsContent>
+    </Tabs>
   </div>
 {/if}

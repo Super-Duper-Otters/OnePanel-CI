@@ -6,6 +6,7 @@ use utoipa::ToSchema;
 
 pub mod fs;
 pub mod git;
+pub mod server;
 
 #[derive(Deserialize, ToSchema)]
 pub struct CreateDirectoryRequest {
