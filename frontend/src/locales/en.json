@@ -1,0 +1,38 @@
+{
+    "app": {
+        "title": "OnePanel CI/CD Manager"
+    },
+    "directory": {
+        "add_title": "Add Repository",
+        "manual_input": "Manual Input",
+        "scan_directory": "Scan Directory",
+        "path_placeholder": "Absolute path to git repository",
+        "add_button": "Add",
+        "browse_button": "Browse to Scan...",
+        "scanning": "Scanning dependencies...",
+        "scan_success": "Scanned and added {count} repositories found in {path}",
+        "scan_failed": "Scan failed",
+        "add_failed": "Failed to add directory",
+        "add_error": "Error adding directory",
+        "list_header": {
+            "path": "Path",
+            "branch": "Branch",
+            "last_update": "Last Update",
+            "status": "Status",
+            "action": "Action"
+        },
+        "remove": "Remove",
+        "status": {
+            "clean": "Clean",
+            "dirty": "Dirty",
+            "error": "Error"
+        }
+    },
+    "picker": {
+        "title": "Browse Directory",
+        "current": "Current Directory",
+        "loading": "Loading...",
+        "cancel": "Cancel",
+        "select": "Select This Folder"
+    }
+}

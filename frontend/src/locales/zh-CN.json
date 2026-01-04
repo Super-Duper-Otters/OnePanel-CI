@@ -1,0 +1,38 @@
+{
+    "app": {
+        "title": "OnePanel CI/CD 管理器"
+    },
+    "directory": {
+        "add_title": "添加仓库",
+        "manual_input": "手动输入",
+        "scan_directory": "扫描目录",
+        "path_placeholder": "Git 仓库绝对路径",
+        "add_button": "添加",
+        "browse_button": "浏览并扫描...",
+        "scanning": "正在扫描依赖...",
+        "scan_success": "在 {path} 中扫描并添加了 {count} 个仓库",
+        "scan_failed": "扫描失败",
+        "add_failed": "添加目录失败",
+        "add_error": "添加目录出错",
+        "list_header": {
+            "path": "路径",
+            "branch": "分支",
+            "last_update": "最后更新",
+            "status": "状态",
+            "action": "操作"
+        },
+        "remove": "移除",
+        "status": {
+            "clean": "干净",
+            "dirty": "未提交",
+            "error": "错误"
+        }
+    },
+    "picker": {
+        "title": "浏览目录",
+        "current": "当前目录",
+        "loading": "加载中...",
+        "cancel": "取消",
+        "select": "选择此文件夹"
+    }
+}

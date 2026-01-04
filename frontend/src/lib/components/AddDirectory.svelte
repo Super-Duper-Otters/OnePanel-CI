@@ -14,6 +14,7 @@
     TabsTrigger,
   } from "$lib/components/ui/tabs";
   import DirectoryPicker from "./DirectoryPicker.svelte";
+  import { t } from "svelte-i18n";
 
   let { onadded } = $props<{ onadded?: () => void }>();
   let path = $state("");
@@ -35,10 +36,11 @@
         onadded?.(); // Notify parent to refresh
       } else {
         console.error("Failed to add directory: " + pathToAdd);
+        alert($t("directory.add_failed"));
       }
     } catch (e) {
       console.error(e);
-      alert("Error adding directory");
+      alert($t("directory.add_error"));
     }
   }
 
@@ -67,12 +69,14 @@
           addedCount++;
         }
         alert(
-          `Scanned and added ${addedCount} repositories found in ${rootPath}`,
+          $t("directory.scan_success", {
+            values: { count: addedCount, path: rootPath },
+          }),
         );
       }
     } catch (e) {
       console.error(e);
-      alert("Scan failed");
+      alert($t("directory.scan_failed"));
     } finally {
       scanning = false;
     }
@@ -85,33 +89,33 @@
 
 <Card class="mb-4">
   <CardHeader>
-    <CardTitle>Add Repository</CardTitle>
+    <CardTitle>{$t("directory.add_title")}</CardTitle>
   </CardHeader>
   <CardContent>
     <Tabs value="manual" class="w-full">
       <TabsList class="grid w-full grid-cols-2 mb-4">
-        <TabsTrigger value="manual">Manual Input</TabsTrigger>
-        <TabsTrigger value="scan">Scan Directory</TabsTrigger>
+        <TabsTrigger value="manual">{$t("directory.manual_input")}</TabsTrigger>
+        <TabsTrigger value="scan">{$t("directory.scan_directory")}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="manual" class="flex gap-4">
         <Input
           type="text"
-          placeholder="Absolute path to git repository"
+          placeholder={$t("directory.path_placeholder")}
           bind:value={path}
         />
-        <Button onclick={handleManualAdd}>Add</Button>
+        <Button onclick={handleManualAdd}>{$t("directory.add_button")}</Button>
       </TabsContent>
 
       <TabsContent value="scan">
         {#if !pickerOpen && !scanning}
           <Button variant="outline" class="w-full" onclick={togglePicker}>
-            Browse to Scan...
+            {$t("directory.browse_button")}
           </Button>
         {/if}
 
         {#if scanning}
-          <div class="text-center p-4">Scanning dependencies...</div>
+          <div class="text-center p-4">{$t("directory.scanning")}</div>
         {/if}
 
         {#if pickerOpen}

@@ -9,7 +9,7 @@
     } from "lucide-svelte";
     import { Button } from "$lib/components/ui/button";
     import { ScrollArea } from "$lib/components/ui/scroll-area";
-    import { cn } from "$lib/utils";
+    import { t } from "svelte-i18n";
 
     interface FileEntry {
         name: string;
@@ -36,14 +36,8 @@
             });
             if (res.ok) {
                 entries = await res.json();
-                // If path is null (root), update currentPath from the first entry if available?
-                // Actually, listing "/" or "." usually returns absolute paths.
-                // We'll rely on the server to handle "null" as cwd.
-                // But for display, if we navigated, use that.
                 if (path) currentPath = path;
                 else if (entries.length > 0 && entries[0].name !== "..") {
-                    // Heuristic: if listing root, assume cwd is parent of items?
-                    // Or just trust the server returned proper paths.
                 }
             }
         } catch (e) {
@@ -74,19 +68,19 @@
     <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold flex items-center gap-2">
             <FolderOpen size={20} />
-            Browse Directory
+            {$t("picker.title")}
         </h3>
     </div>
 
     <div
         class="mb-2 text-sm text-muted-foreground break-all bg-muted p-2 rounded"
     >
-        {currentPath || "Current Directory"}
+        {currentPath || $t("picker.current")}
     </div>
 
     <ScrollArea class="h-[300px] border rounded-md p-2">
         {#if loading}
-            <div class="flex justify-center p-4">Loading...</div>
+            <div class="flex justify-center p-4">{$t("picker.loading")}</div>
         {:else}
             <ul class="space-y-1">
                 {#each entries as entry}
@@ -115,10 +109,12 @@
     </ScrollArea>
 
     <div class="flex justify-end gap-2 mt-4">
-        <Button variant="outline" onclick={oncancel}>Cancel</Button>
+        <Button variant="outline" onclick={oncancel}
+            >{$t("picker.cancel")}</Button
+        >
         <Button onclick={handleSelectCurrent} disabled={!currentPath}>
             <Check size={16} class="mr-2" />
-            Select This Folder
+            {$t("picker.select")}
         </Button>
     </div>
 </div>

@@ -10,6 +10,7 @@
   } from "$lib/components/ui/table";
   import { Button } from "$lib/components/ui/button";
   import { Badge } from "$lib/components/ui/badge";
+  import { t } from "svelte-i18n";
 
   let { refreshTrigger = 0 } = $props<{ refreshTrigger?: number }>();
 
@@ -62,11 +63,11 @@
 <Table>
   <TableHeader>
     <TableRow>
-      <TableHead>Path</TableHead>
-      <TableHead>Branch</TableHead>
-      <TableHead>Last Update</TableHead>
-      <TableHead>Status</TableHead>
-      <TableHead>Action</TableHead>
+      <TableHead>{$t("directory.list_header.path")}</TableHead>
+      <TableHead>{$t("directory.list_header.branch")}</TableHead>
+      <TableHead>{$t("directory.list_header.last_update")}</TableHead>
+      <TableHead>{$t("directory.list_header.status")}</TableHead>
+      <TableHead>{$t("directory.list_header.action")}</TableHead>
     </TableRow>
   </TableHeader>
   <TableBody>
@@ -83,14 +84,14 @@
         </TableCell>
         <TableCell>
           {#if dir.error}
-            <Badge variant="destructive">Error</Badge>
+            <Badge variant="destructive">{$t("directory.status.error")}</Badge>
           {:else if dir.git_status?.is_clean}
             <Badge variant="outline" class="bg-green-100 text-green-800"
-              >Clean</Badge
+              >{$t("directory.status.clean")}</Badge
             >
           {:else}
             <Badge variant="outline" class="bg-yellow-100 text-yellow-800"
-              >Dirty</Badge
+              >{$t("directory.status.dirty")}</Badge
             >
           {/if}
         </TableCell>
@@ -98,7 +99,8 @@
           <Button
             variant="destructive"
             size="sm"
-            onclick={() => removeDirectory(dir.path)}>Remove</Button
+            onclick={() => removeDirectory(dir.path)}
+            >{$t("directory.remove")}</Button
           >
         </TableCell>
       </TableRow>
