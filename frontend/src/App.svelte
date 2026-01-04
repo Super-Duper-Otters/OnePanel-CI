@@ -2,27 +2,30 @@
   import { locale, t, isLoading } from "svelte-i18n";
   import { Button } from "$lib/components/ui/button";
   import { Toaster } from "$lib/components/ui/sonner";
-  import DirectoryList from "$lib/components/DirectoryList.svelte";
-  import AddDirectory from "$lib/components/AddDirectory.svelte";
-  import DirectoryDetail from "$lib/components/DirectoryDetail.svelte";
-  import ServerList from "$lib/components/ServerList.svelte";
   import {
     Tabs,
     TabsContent,
     TabsList,
     TabsTrigger,
   } from "$lib/components/ui/tabs";
+  import DirectoryList from "$lib/components/DirectoryList.svelte";
+  import DirectoryDetail from "$lib/components/DirectoryDetail.svelte";
+  import ServerList from "$lib/components/ServerList.svelte";
+  import DockerDashboard from "$lib/components/DockerDashboard.svelte";
+  import { Settings, Plus } from "lucide-svelte";
+  import SettingsDialog from "$lib/components/SettingsDialog.svelte";
+  import AddDirectoryDialog from "$lib/components/AddDirectoryDialog.svelte";
+  import AddServerDialog from "$lib/components/AddServerDialog.svelte";
 
-  import { Plus } from "lucide-svelte";
+  let settingsOpen = $state(false);
+  let addRepoOpen = $state(false);
+  let addServerOpen = $state(false);
+  let currentTab = $state("repositories");
 
+  // Repository list state
   let refreshTrigger = $state(0);
   let selectedPath = $state<string | null>(null);
-  let currentTab = $state("repositories");
-  let serverList = $state<any>(null);
-
-  function handleAdded() {
-    refreshTrigger++;
-  }
+  let serverList = $state<any>(null); // For server list refresh if needed
 
   function handleSelect(path: string) {
     selectedPath = path;
@@ -32,20 +35,35 @@
     selectedPath = null;
   }
 
-  function toggleLanguage() {
-    locale.update((l) => (l === "zh-CN" ? "en" : "zh-CN"));
+  function onRepoAdded() {
+    refreshTrigger++;
   }
+
+  function onServerAdded() {
+    // serverList might auto-refresh or need trigger
+    if (serverList && serverList.refresh) {
+      serverList.refresh();
+    }
+  }
+
+  const onAdd = () => {
+    if (currentTab === "repositories") {
+      addRepoOpen = true;
+    } else if (currentTab === "servers") {
+      addServerOpen = true;
+    }
+  };
 </script>
 
 {#if $isLoading}
   <div class="flex items-center justify-center min-h-screen">Loading...</div>
 {:else}
   <Toaster />
-  <div class="container mx-auto py-8">
+  <main class="container mx-auto py-8">
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-3xl font-bold">{$t("app.title")}</h1>
-      <Button variant="outline" size="sm" onclick={toggleLanguage}>
-        {$locale === "zh-CN" ? "English" : "中文"}
+      <Button variant="ghost" size="icon" onclick={() => (settingsOpen = true)}>
+        <Settings class="h-5 w-5" />
       </Button>
     </div>
 
@@ -57,14 +75,15 @@
             >{$t("tabs.repositories")}</TabsTrigger
           >
           <TabsTrigger value="servers">{$t("tabs.servers")}</TabsTrigger>
+          <TabsTrigger value="docker"
+            >{$t("tabs.docker") || "Docker"}</TabsTrigger
+          >
         </TabsList>
         <div>
-          {#if currentTab === "repositories"}
-            <AddDirectory onadded={handleAdded} />
-          {:else if currentTab === "servers"}
-            <Button onclick={() => serverList?.openAddDialog()}>
+          {#if currentTab !== "docker"}
+            <Button onclick={onAdd}>
               <Plus class="mr-2 h-4 w-4" />
-              {$t("servers.add_button")}
+              {$t("directory.add_button")}
             </Button>
           {/if}
         </div>
@@ -84,6 +103,13 @@
         <!-- @ts-ignore -->
         <ServerList bind:this={serverList} />
       </TabsContent>
+      <TabsContent value="docker">
+        <DockerDashboard />
+      </TabsContent>
     </Tabs>
-  </div>
+
+    <SettingsDialog bind:open={settingsOpen} />
+    <AddDirectoryDialog bind:open={addRepoOpen} onadded={onRepoAdded} />
+    <AddServerDialog bind:open={addServerOpen} onadded={onServerAdded} />
+  </main>
 {/if}

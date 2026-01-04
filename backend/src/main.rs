@@ -6,6 +6,7 @@ use utoipa::OpenApi;
 use utoipa_scalar::{Scalar, Servable};
 
 mod db;
+mod docker;
 mod fs;
 mod git;
 mod handlers;
@@ -13,6 +14,7 @@ mod models;
 mod onepanel;
 mod state;
 
+use docker::DockerInfo;
 use fs::{FileEntry, ListRequest, ReadFileRequest, ScanRequest};
 use git::{CommitInfo, FileStatus, GitStatus};
 use handlers::git::{GitLogRequest, GitStatusRequest};
@@ -38,15 +40,17 @@ use state::AppState;
         handlers::server::delete_server,
         handlers::server::get_server_status,
         handlers::server::update_server,
+        handlers::docker::get_info,
     ),
     components(
-        schemas(CreateDirectoryRequest, DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, ReadFileRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest, CreateServerRequest, ServerResponse, DashboardResponse, OsInfo, Server, Repository)
+        schemas(CreateDirectoryRequest, DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, ReadFileRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest, CreateServerRequest, ServerResponse, DashboardResponse, OsInfo, Server, Repository, DockerInfo)
     ),
     tags(
         (name = "directories", description = "Directory management endpoints"),
         (name = "fs", description = "File system endpoints"),
         (name = "git", description = "Git operations endpoints"),
-        (name = "servers", description = "Server management endpoints")
+        (name = "servers", description = "Server management endpoints"),
+        (name = "docker", description = "Docker endpoints")
     )
 )]
 struct ApiDoc;
@@ -97,6 +101,7 @@ async fn main() {
             "/api/servers/{id}/status",
             get(handlers::server::get_server_status),
         )
+        .route("/api/docker/info", get(handlers::docker::get_info))
         .merge(Scalar::with_url("/scalar", ApiDoc::openapi()))
         .layer(
             CorsLayer::new()

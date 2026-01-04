@@ -57,7 +57,15 @@
     },
     "tabs": {
         "repositories": "Repositories",
-        "servers": "Servers"
+        "servers": "Servers",
+        "docker": "Docker Environment"
+    },
+    "docker": {
+        "title": "Docker Environment",
+        "refresh": "Refresh",
+        "status": "Status",
+        "containers": "Containers",
+        "images": "Images"
     },
     "servers": {
         "dashboard_title": "Server Dashboard",

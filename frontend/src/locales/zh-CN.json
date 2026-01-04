@@ -57,7 +57,15 @@
     },
     "tabs": {
         "repositories": "代码仓库",
-        "servers": "服务器"
+        "servers": "服务器",
+        "docker": "Docker环境"
+    },
+    "docker": {
+        "title": "Docker环境",
+        "refresh": "刷新",
+        "status": "状态",
+        "containers": "容器",
+        "images": "镜像"
     },
     "servers": {
         "dashboard_title": "服务器面板",
