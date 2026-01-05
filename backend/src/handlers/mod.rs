@@ -4,5 +4,6 @@ pub mod deploy;
 pub mod docker;
 pub mod fs;
 pub mod git;
+pub mod image;
 pub mod repository;
 pub mod server;

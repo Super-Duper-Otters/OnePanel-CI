@@ -163,10 +163,30 @@
             "loading": "加载内容中...",
             "error_loading": "加载内容失败: {error}"
         },
+        "images": {
+            "loading": "加载镜像中...",
+            "no_images": "暂无镜像",
+            "error_loading": "加载镜像失败: {error}",
+            "confirm_remove": "确定要删除该镜像吗？",
+            "remove_success": "镜像删除成功",
+            "remove_error": "删除镜像失败",
+            "table": {
+                "id": "ID",
+                "tags": "标签",
+                "size": "大小",
+                "created": "创建时间",
+                "status": "状态"
+            },
+            "status": {
+                "used": "已使用",
+                "unused": "未使用"
+            }
+        },
         "detail": {
             "overview": "概览",
             "containers": "容器列表",
             "composes": "编排列表",
+            "images": "镜像列表",
             "system_info": "系统信息",
             "resources": "资源监控",
             "os": "操作系统",

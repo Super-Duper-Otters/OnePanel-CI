@@ -645,4 +645,100 @@ impl OnePanelClient {
             Err(anyhow!("1Panel API error: {} - {}", status, text))
         }
     }
+
+    pub async fn list_images(host: &str, port: u16, api_key: &str) -> Result<serde_json::Value> {
+        let client = reqwest::Client::new();
+        let host_clean = host
+            .trim_start_matches("http://")
+            .trim_start_matches("https://");
+        let timestamp = chrono::Local::now().timestamp_millis() / 1000;
+
+        let token_raw = format!("1panel{}{}", api_key, timestamp);
+        let token_digest = md5::compute(token_raw.as_bytes());
+        let token_str = format!("{:x}", token_digest);
+
+        let url = format!("http://{}:{}/api/v1/containers/image/all", host_clean, port);
+
+        let res = client
+            .get(&url)
+            .header("1Panel-Token", token_str)
+            .header("1Panel-Timestamp", timestamp.to_string())
+            .send()
+            .await?;
+
+        if res.status().is_success() {
+            let text = res.text().await?;
+            let json: serde_json::Value =
+                serde_json::from_str(&text).unwrap_or(serde_json::Value::Null);
+
+            if let Some(code) = json.get("code").and_then(|c| c.as_i64()) {
+                if code != 200 {
+                    let msg = json
+                        .get("message")
+                        .and_then(|m| m.as_str())
+                        .unwrap_or("Unknown error");
+                    return Err(anyhow!("API returned error code {}: {}", code, msg));
+                }
+            }
+
+            Ok(json.get("data").cloned().unwrap_or(serde_json::Value::Null))
+        } else {
+            Err(anyhow!("API request failed with status: {}", res.status()))
+        }
+    }
+
+    pub async fn remove_image(
+        host: &str,
+        port: u16,
+        api_key: &str,
+        id: &str,
+        force: bool,
+    ) -> Result<()> {
+        let client = reqwest::Client::new();
+        let host_clean = host
+            .trim_start_matches("http://")
+            .trim_start_matches("https://");
+        let timestamp = chrono::Local::now().timestamp_millis() / 1000;
+
+        let token_raw = format!("1panel{}{}", api_key, timestamp);
+        let token_digest = md5::compute(token_raw.as_bytes());
+        let token_str = format!("{:x}", token_digest);
+
+        let url = format!(
+            "http://{}:{}/api/v1/containers/image/remove",
+            host_clean, port
+        );
+
+        let payload = serde_json::json!({
+            "names": [id],
+            "force": force
+        });
+
+        let res = client
+            .post(&url)
+            .header("1Panel-Token", token_str)
+            .header("1Panel-Timestamp", timestamp.to_string())
+            .json(&payload)
+            .send()
+            .await?;
+
+        if res.status().is_success() {
+            let text = res.text().await?;
+            let json: serde_json::Value =
+                serde_json::from_str(&text).unwrap_or(serde_json::Value::Null);
+
+            if let Some(code) = json.get("code").and_then(|c| c.as_i64()) {
+                if code != 200 {
+                    let msg = json
+                        .get("message")
+                        .and_then(|m| m.as_str())
+                        .unwrap_or("Unknown error");
+                    return Err(anyhow!("API returned error code {}: {}", code, msg));
+                }
+            }
+            Ok(())
+        } else {
+            Err(anyhow!("API request failed with status: {}", res.status()))
+        }
+    }
 }

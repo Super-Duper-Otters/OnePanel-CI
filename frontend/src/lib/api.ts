@@ -94,3 +94,24 @@ export async function updateComposeContent(serverId: number, path: string, conte
         throw new Error(await res.text());
     }
 }
+
+export async function listImages(serverId: number) {
+    const res = await fetch(`${API_BASE}/servers/${serverId}/images`);
+    if (!res.ok) {
+        throw new Error(await res.text());
+    }
+    return res.json();
+}
+
+export async function removeImage(serverId: number, id: string, force: boolean) {
+    const res = await fetch(`${API_BASE}/servers/${serverId}/images/remove`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id, force }),
+    });
+    if (!res.ok) {
+        throw new Error(await res.text());
+    }
+}

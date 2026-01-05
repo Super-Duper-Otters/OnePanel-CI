@@ -163,10 +163,30 @@
             "loading": "Loading content...",
             "error_loading": "Error loading content: {error}"
         },
+        "images": {
+            "loading": "Loading images...",
+            "no_images": "No images found",
+            "error_loading": "Failed to load images: {error}",
+            "confirm_remove": "Are you sure you want to remove this image?",
+            "remove_success": "Image removed successfully",
+            "remove_error": "Failed to remove image",
+            "table": {
+                "id": "ID",
+                "tags": "Tags",
+                "size": "Size",
+                "created": "Created",
+                "status": "Status"
+            },
+            "status": {
+                "used": "In Use",
+                "unused": "Unused"
+            }
+        },
         "detail": {
             "overview": "Overview",
             "containers": "Containers",
             "composes": "Comp. Stacks",
+            "images": "Images",
             "system_info": "System Information",
             "resources": "Resources",
             "os": "OS",
