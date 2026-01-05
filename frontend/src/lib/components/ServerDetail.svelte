@@ -8,6 +8,7 @@
     import { Button } from "$lib/components/ui/button";
     import { ArrowLeft, RefreshCw } from "lucide-svelte";
     import ContainerList from "./ContainerList.svelte";
+    import ComposeList from "./ComposeList.svelte";
     import { getServerStatus, getServer } from "$lib/api";
     import { onMount } from "svelte";
     import {
@@ -46,11 +47,13 @@
     // Initialize from URL immediately
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get("tab");
-    if (tabParam && ["overview", "containers"].includes(tabParam)) {
+    if (tabParam && ["overview", "containers", "composes"].includes(tabParam)) {
         currentTab = tabParam;
     }
     let containerListComp: any = $state(null);
+    let composeListComp: any = $state(null);
     let containerLoading = $state(false);
+    let composeLoading = $state(false);
     let overviewLoading = $state(false);
 
     async function refreshOverview() {
@@ -69,11 +72,17 @@
             refreshOverview();
         } else if (currentTab === "containers") {
             containerListComp?.refresh();
+        } else if (currentTab === "composes") {
+            composeListComp?.refresh();
         }
     }
 
     let isRefreshing = $derived(
-        currentTab === "overview" ? overviewLoading : containerLoading,
+        currentTab === "overview"
+            ? overviewLoading
+            : currentTab === "containers"
+              ? containerLoading
+              : composeLoading,
     );
 
     $effect(() => {
@@ -114,6 +123,9 @@
                 >
                 <TabsTrigger value="containers"
                     >{$t("servers.detail.containers")}</TabsTrigger
+                >
+                <TabsTrigger value="composes"
+                    >{$t("servers.detail.composes")}</TabsTrigger
                 >
             </TabsList>
             <Button
@@ -205,6 +217,14 @@
                 serverId={server.id}
                 bind:this={containerListComp}
                 bind:loading={containerLoading}
+            />
+        </TabsContent>
+        <TabsContent value="composes">
+            <!-- @ts-ignore -->
+            <ComposeList
+                serverId={server.id}
+                bind:this={composeListComp}
+                bind:loading={composeLoading}
             />
         </TabsContent>
     </Tabs>

@@ -2,6 +2,11 @@
     "app": {
         "title": "OnePanel CI/CD 管理器"
     },
+    "common": {
+        "view": "查看",
+        "actions": "操作",
+        "close": "关闭"
+    },
     "directory": {
         "add_title": "添加仓库",
         "manual_input": "手动输入",
@@ -139,9 +144,28 @@
             "loading": "加载中...",
             "no_containers": "未找到容器或加载失败。"
         },
+        "compose_list": {
+            "title": "编排列表",
+            "refresh": "刷新",
+            "table": {
+                "name": "名称",
+                "status": "状态",
+                "path": "路径",
+                "created": "创建时间"
+            },
+            "loading": "加载中...",
+            "no_composes": "未找到编排",
+            "error_loading": "加载编排失败: {error}"
+        },
+        "compose_content": {
+            "title": "编排文件",
+            "loading": "加载内容中...",
+            "error_loading": "加载内容失败: {error}"
+        },
         "detail": {
             "overview": "概览",
             "containers": "容器列表",
+            "composes": "编排列表",
             "system_info": "系统信息",
             "resources": "资源监控",
             "os": "操作系统",

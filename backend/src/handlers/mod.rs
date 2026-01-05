@@ -1,3 +1,4 @@
+pub mod compose;
 pub mod container;
 pub mod deploy;
 pub mod docker;

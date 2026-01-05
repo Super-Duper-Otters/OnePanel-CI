@@ -60,3 +60,24 @@ export async function pushImage(serverId: number, imageTag: string) {
         throw new Error(`Failed to push image: ${text}`);
     }
 }
+export async function listComposes(serverId: number) {
+    const res = await fetch(`${API_BASE}/servers/${serverId}/composes`);
+    if (!res.ok) {
+        throw new Error(await res.text());
+    }
+    return res.json();
+}
+
+export async function getComposeContent(serverId: number, path: string) {
+    const res = await fetch(`${API_BASE}/servers/${serverId}/composes/content`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ path }),
+    });
+    if (!res.ok) {
+        throw new Error(await res.text());
+    }
+    return res.text();
+}

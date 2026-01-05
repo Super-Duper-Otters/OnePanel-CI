@@ -452,4 +452,145 @@ impl OnePanelClient {
             Err(anyhow!("Load image failed: {} - {}", status, body))
         }
     }
+
+    pub async fn list_composes(
+        host: &str,
+        port: u16,
+        api_key: &str,
+    ) -> Result<Vec<serde_json::Value>> {
+        let client = Client::builder()
+            .no_proxy()
+            .build()
+            .unwrap_or_else(|_| Client::new());
+
+        let timestamp = Utc::now().timestamp();
+        let api_key = api_key.trim();
+        let host_clean = host
+            .trim()
+            .trim_start_matches("http://")
+            .trim_start_matches("https://")
+            .trim_end_matches('/');
+
+        let token_raw = format!("1panel{}{}", api_key, timestamp);
+        let token_digest = md5::compute(token_raw.as_bytes());
+        let token_str = format!("{:x}", token_digest);
+
+        let url = format!(
+            "http://{}:{}/api/v1/containers/compose/search",
+            host_clean, port
+        );
+
+        // Payload for listing composes
+        let payload = serde_json::json!({
+            "page": 1,
+            "pageSize": 100,
+            "name": "",
+            "orderBy": "created_at",
+            "order": "descending"
+        });
+
+        let res = client
+            .post(&url)
+            .header("1Panel-Token", token_str)
+            .header("1Panel-Timestamp", timestamp.to_string())
+            .json(&payload)
+            .send()
+            .await?;
+
+        if res.status().is_success() {
+            let text = res.text().await?;
+            let json: serde_json::Value =
+                serde_json::from_str(&text).unwrap_or(serde_json::Value::Null);
+
+            if let Some(code) = json.get("code").and_then(|c| c.as_i64()) {
+                if code != 200 {
+                    let msg = json
+                        .get("message")
+                        .and_then(|m| m.as_str())
+                        .unwrap_or("Unknown error");
+                    return Err(anyhow!("API returned error code {}: {}", code, msg));
+                }
+            }
+
+            let data = json
+                .get("data")
+                .ok_or_else(|| anyhow!("Missing data field in response"))?;
+
+            // Extract items logic
+            let items = if let Some(items) = data.get("items").and_then(|i| i.as_array()) {
+                items.clone()
+            } else if let Some(arr) = data.as_array() {
+                arr.clone()
+            } else {
+                return Err(anyhow!("Data field is not an array or page result"));
+            };
+
+            Ok(items)
+        } else {
+            let status = res.status();
+            let body = res.text().await.unwrap_or_default();
+            Err(anyhow!("List composes failed: {} - {}", status, body))
+        }
+    }
+
+    pub async fn read_file(host: &str, port: u16, api_key: &str, path: &str) -> Result<String> {
+        let client = Client::builder()
+            .no_proxy()
+            .build()
+            .unwrap_or_else(|_| Client::new());
+
+        let timestamp = Utc::now().timestamp();
+        let api_key = api_key.trim();
+        let host_clean = host
+            .trim()
+            .trim_start_matches("http://")
+            .trim_start_matches("https://")
+            .trim_end_matches('/');
+
+        let token_raw = format!("1panel{}{}", api_key, timestamp);
+        let token_digest = md5::compute(token_raw.as_bytes());
+        let token_str = format!("{:x}", token_digest);
+
+        let url = format!("http://{}:{}/api/v1/files/content", host_clean, port);
+
+        let payload = serde_json::json!({
+            "path": path,
+        });
+
+        let res = client
+            .post(&url)
+            .header("1Panel-Token", token_str)
+            .header("1Panel-Timestamp", timestamp.to_string())
+            .json(&payload)
+            .send()
+            .await?;
+
+        if res.status().is_success() {
+            let text = res.text().await?;
+            let json: serde_json::Value =
+                serde_json::from_str(&text).unwrap_or(serde_json::Value::Null);
+
+            if let Some(code) = json.get("code").and_then(|c| c.as_i64()) {
+                if code != 200 {
+                    let msg = json
+                        .get("message")
+                        .and_then(|m| m.as_str())
+                        .unwrap_or("Unknown error");
+                    return Err(anyhow!("API returned error code {}: {}", code, msg));
+                }
+            }
+
+            let content = json
+                .get("data")
+                .and_then(|d| d.get("content"))
+                .and_then(|c| c.as_str())
+                .unwrap_or("");
+
+            Ok(content.to_string())
+        } else {
+            let status = res.status();
+            let body = res.text().await.unwrap_or_default();
+            Err(anyhow!("Read file failed: {} - {}", status, body))
+        }
+    }
 }

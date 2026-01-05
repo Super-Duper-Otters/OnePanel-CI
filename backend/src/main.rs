@@ -46,9 +46,11 @@ use state::AppState;
         handlers::container::operate_container,
         handlers::container::get_logs,
         handlers::deploy::push_image_to_server,
+        handlers::compose::list_composes,
+        handlers::compose::get_content,
     ),
     components(
-        schemas(CreateDirectoryRequest, DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, ReadFileRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest, CreateServerRequest, ServerResponse, DashboardResponse, OsInfo, Server, Repository, DockerInfo, docker::DockerImage, models::ContainerOperationReq, models::PushImageReq)
+        schemas(CreateDirectoryRequest, DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, ReadFileRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest, CreateServerRequest, ServerResponse, DashboardResponse, OsInfo, Server, Repository, DockerInfo, docker::DockerImage, models::ContainerOperationReq, models::PushImageReq, handlers::compose::GetContentReq)
     ),
     tags(
         (name = "directories", description = "Directory management endpoints"),
@@ -137,6 +139,14 @@ async fn main() {
         .route(
             "/api/servers/{id}/containers/logs",
             get(handlers::container::get_logs),
+        )
+        .route(
+            "/api/servers/{id}/composes",
+            get(handlers::compose::list_composes),
+        )
+        .route(
+            "/api/servers/{id}/composes/content",
+            axum::routing::post(handlers::compose::get_content),
         )
         .route(
             "/api/deploy/image",

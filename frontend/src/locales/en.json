@@ -2,6 +2,11 @@
     "app": {
         "title": "OnePanel CI/CD Manager"
     },
+    "common": {
+        "view": "View",
+        "actions": "Actions",
+        "close": "Close"
+    },
     "directory": {
         "add_title": "Add Repository",
         "manual_input": "Manual Input",
@@ -139,9 +144,28 @@
             "loading": "Loading...",
             "no_containers": "No containers found or failed to load."
         },
+        "compose_list": {
+            "title": "Compose Stacks",
+            "refresh": "Refresh",
+            "table": {
+                "name": "Name",
+                "status": "Status",
+                "path": "Path",
+                "created": "Created"
+            },
+            "loading": "Loading...",
+            "no_composes": "No compose stacks found.",
+            "error_loading": "Error loading composes: {error}"
+        },
+        "compose_content": {
+            "title": "Compose File",
+            "loading": "Loading content...",
+            "error_loading": "Error loading content: {error}"
+        },
         "detail": {
             "overview": "Overview",
             "containers": "Containers",
+            "composes": "Comp. Stacks",
             "system_info": "System Information",
             "resources": "Resources",
             "os": "OS",
