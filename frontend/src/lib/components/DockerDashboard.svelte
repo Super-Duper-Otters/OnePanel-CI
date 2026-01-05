@@ -42,7 +42,6 @@
 
     onMount(() => {
         fetchDockerInfo();
-        interval = setInterval(fetchDockerInfo, 10000); // Auto refresh every 10s
     });
 
     onDestroy(() => {
