@@ -1,7 +1,10 @@
 use crate::models::DashboardResponse;
 use anyhow::{anyhow, Result};
 use chrono::Utc;
+#[allow(unused_imports)]
+use reqwest::multipart;
 use reqwest::Client;
+use std::path::Path;
 
 pub struct OnePanelClient;
 
@@ -313,6 +316,140 @@ impl OnePanelClient {
             let status = res.status();
             let body = res.text().await.unwrap_or_default();
             Err(anyhow!("Get logs failed: {} - {}", status, body))
+        }
+    }
+
+    pub async fn upload_file(
+        host: &str,
+        port: u16,
+        api_key: &str,
+        file_path: &Path,
+        remote_dir: &str,
+    ) -> Result<String> {
+        let client = Client::builder()
+            .no_proxy()
+            .build()
+            .unwrap_or_else(|_| Client::new());
+
+        let timestamp = Utc::now().timestamp();
+        let api_key = api_key.trim();
+        let host_clean = host
+            .trim()
+            .trim_start_matches("http://")
+            .trim_start_matches("https://")
+            .trim_end_matches('/');
+
+        let token_raw = format!("1panel{}{}", api_key, timestamp);
+        let token_digest = md5::compute(token_raw.as_bytes());
+        let token_str = format!("{:x}", token_digest);
+
+        let url = format!("http://{}:{}/api/v1/files/upload", host_clean, port);
+
+        // Prepare multipart
+        let file_name = file_path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .ok_or_else(|| anyhow!("Invalid filename"))?
+            .to_string();
+
+        let file_content = tokio::fs::read(file_path).await?;
+        let part_file = multipart::Part::bytes(file_content).file_name(file_name.clone());
+
+        let form = multipart::Form::new()
+            .part("file", part_file)
+            .part("path", multipart::Part::text(remote_dir.to_string()))
+            .part("overwrite", multipart::Part::text("true"));
+
+        let res = client
+            .post(&url)
+            .header("1Panel-Token", token_str)
+            .header("1Panel-Timestamp", timestamp.to_string())
+            .multipart(form)
+            .send()
+            .await?;
+
+        if res.status().is_success() {
+            let text = res.text().await?;
+            let json: serde_json::Value =
+                serde_json::from_str(&text).unwrap_or(serde_json::Value::Null);
+
+            // Check for error code in successful http response
+            if let Some(code) = json.get("code").and_then(|c| c.as_i64()) {
+                if code != 200 {
+                    let msg = json
+                        .get("message")
+                        .and_then(|m| m.as_str())
+                        .unwrap_or("Unknown error");
+                    return Err(anyhow!("Upload failed (API {}): {}", code, msg));
+                }
+            }
+
+            if let Some(data) = json.get("data").and_then(|d| d.as_str()) {
+                Ok(data.to_string())
+            } else {
+                // If data is null, assume successes and construct path
+                // But usually 1Panel might return something?
+                // If null, we construct it: remote_dir + / + filename
+                let full_path = format!("{}/{}", Self::remote_path_clean(remote_dir), file_name);
+                Ok(full_path)
+            }
+        } else {
+            let status = res.status();
+            let body = res.text().await.unwrap_or_default();
+            Err(anyhow!("Upload file failed: {} - {}", status, body))
+        }
+    }
+
+    // Helper helper
+    fn remote_path_clean(p: &str) -> String {
+        if p.ends_with('/') {
+            p[..p.len() - 1].to_string()
+        } else {
+            p.to_string()
+        }
+    }
+
+    pub async fn load_image(host: &str, port: u16, api_key: &str, remote_path: &str) -> Result<()> {
+        let client = Client::builder()
+            .no_proxy()
+            .build()
+            .unwrap_or_else(|_| Client::new());
+
+        let timestamp = Utc::now().timestamp();
+        let api_key = api_key.trim();
+        let host_clean = host
+            .trim()
+            .trim_start_matches("http://")
+            .trim_start_matches("https://")
+            .trim_end_matches('/');
+
+        let token_raw = format!("1panel{}{}", api_key, timestamp);
+        let token_digest = md5::compute(token_raw.as_bytes());
+        let token_str = format!("{:x}", token_digest);
+
+        let url = format!(
+            "http://{}:{}/api/v1/containers/image/load",
+            host_clean, port
+        );
+
+        let payload = serde_json::json!({
+            "path": remote_path
+        });
+
+        let res = client
+            .post(&url)
+            .header("1Panel-Token", token_str)
+            .header("1Panel-Timestamp", timestamp.to_string())
+            .json(&payload)
+            .send()
+            .await?;
+
+        if res.status().is_success() {
+            Ok(())
+        } else {
+            let status = res.status();
+            let body = res.text().await.unwrap_or_default();
+            Err(anyhow!("Load image failed: {} - {}", status, body))
         }
     }
 }

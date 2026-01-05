@@ -29,6 +29,9 @@
     } from "$lib/components/ui/dialog";
     import DockerConfigDialog from "./DockerConfigDialog.svelte";
     import DockerBuildDialog from "./DockerBuildDialog.svelte";
+    import DeployDialog from "./DeployDialog.svelte";
+    import { pushImage } from "$lib/api";
+    import { onDestroy } from "svelte";
     import {
         File,
         Folder,
@@ -36,10 +39,13 @@
         ChevronLeft,
         Settings,
         Hammer,
+        Upload,
+        RefreshCw,
     } from "lucide-svelte";
     import { Badge } from "$lib/components/ui/badge";
     import { t } from "svelte-i18n";
     import { toast } from "svelte-sonner";
+    import clsx from "clsx";
 
     let { path, onback } = $props<{ path: string; onback: () => void }>();
 
@@ -88,6 +94,23 @@
     let images = $state<DockerImage[]>([]);
     let loadingImages = $state(false);
 
+    // Push State
+    let deployDialogOpen = $state(false);
+    let imageToDeploy = $state("");
+
+    function openDeployDialog(imageTag: string) {
+        imageToDeploy = imageTag;
+        deployDialogOpen = true;
+    }
+
+    async function handlePush(serverId: number) {
+        toast.promise(pushImage(serverId, imageToDeploy), {
+            loading: `Pushing image ${imageToDeploy}...`,
+            success: `Image ${imageToDeploy} pushed successfully!`,
+            error: (e) => `Failed to push image: ${e.message || e}`,
+        });
+    }
+
     async function loadData() {
         loading = true;
         try {
@@ -126,23 +149,6 @@
         }
     }
 
-    async function loadImages() {
-        if (!dockerImageName) return;
-        loadingImages = true;
-        try {
-            const res = await fetch(
-                `http://localhost:3000/api/docker/tags?image=${dockerImageName}`,
-            );
-            if (res.ok) {
-                images = await res.json();
-            }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            loadingImages = false;
-        }
-    }
-
     async function loadFiles(dirPath: string) {
         currentPath = dirPath;
         try {
@@ -163,6 +169,22 @@
             }
         } catch (e) {
             console.error(e);
+        }
+    }
+    async function loadImages() {
+        if (!dockerImageName) return;
+        loadingImages = true;
+        try {
+            const res = await fetch(
+                `http://localhost:3000/api/docker/tags?image=${dockerImageName}`,
+            );
+            if (res.ok) {
+                images = await res.json();
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            loadingImages = false;
         }
     }
 
@@ -259,7 +281,7 @@
                 <span class="text-xs text-muted-foreground">{path}</span>
             </div>
         </div>
-        <div>
+        <div class="flex items-center gap-2">
             {#if hasDockerfile}
                 {#if !dockerImageName}
                     <Button
@@ -296,8 +318,23 @@
                     </div>
                 {/if}
             {/if}
+            <Button
+                variant="outline"
+                size="sm"
+                onclick={loadFiles}
+                disabled={loading}
+                title="Refresh"
+            >
+                <RefreshCw class={clsx("h-4 w-4", loading && "animate-spin")} />
+            </Button>
         </div>
     </div>
+
+    <DeployDialog
+        bind:open={deployDialogOpen}
+        imageTag={imageToDeploy}
+        onpush={handlePush}
+    />
 
     <Tabs value={activeTab} class="w-full" onValueChange={handleTabChange}>
         <TabsList>
@@ -517,6 +554,11 @@
                                             "docker.images_panel.table.created",
                                         )}</TableHead
                                     >
+                                    <TableHead
+                                        >{$t("common.actions", {
+                                            default: "Actions",
+                                        })}</TableHead
+                                    >
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -555,6 +597,21 @@
                                                 image.created * 1000,
                                             ).toLocaleString()}</TableCell
                                         >
+                                        <TableCell>
+                                            {#if image.tags.length > 0}
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    title="Deploy to Server"
+                                                    onclick={() =>
+                                                        openDeployDialog(
+                                                            image.tags[0],
+                                                        )}
+                                                >
+                                                    <Upload class="h-4 w-4" />
+                                                </Button>
+                                            {/if}
+                                        </TableCell>
                                     </TableRow>
                                 {/each}
                             </TableBody>
@@ -591,5 +648,10 @@
         imageName={dockerImageName}
         {path}
         onSuccess={loadImages}
+    />
+    <DeployDialog
+        bind:open={deployDialogOpen}
+        imageTag={imageToDeploy}
+        onpush={handlePush}
     />
 </div>

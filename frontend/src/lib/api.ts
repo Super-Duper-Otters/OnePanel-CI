@@ -49,3 +49,14 @@ export async function getContainerLogs(serverId: number, container: string) {
     if (!res.ok) throw new Error("Failed to fetch logs");
     return res.text();
 }
+export async function pushImage(serverId: number, imageTag: string) {
+    const res = await fetch(`${API_BASE}/deploy/image`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ serverId, imageTag }),
+    });
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Failed to push image: ${text}`);
+    }
+}

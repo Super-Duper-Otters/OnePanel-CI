@@ -45,9 +45,10 @@ use state::AppState;
         handlers::container::list_containers,
         handlers::container::operate_container,
         handlers::container::get_logs,
+        handlers::deploy::push_image_to_server,
     ),
     components(
-        schemas(CreateDirectoryRequest, DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, ReadFileRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest, CreateServerRequest, ServerResponse, DashboardResponse, OsInfo, Server, Repository, DockerInfo, docker::DockerImage, models::ContainerOperationReq)
+        schemas(CreateDirectoryRequest, DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, ReadFileRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest, CreateServerRequest, ServerResponse, DashboardResponse, OsInfo, Server, Repository, DockerInfo, docker::DockerImage, models::ContainerOperationReq, models::PushImageReq)
     ),
     tags(
         (name = "directories", description = "Directory management endpoints"),
@@ -136,6 +137,10 @@ async fn main() {
         .route(
             "/api/servers/{id}/containers/logs",
             get(handlers::container::get_logs),
+        )
+        .route(
+            "/api/deploy/image",
+            axum::routing::post(handlers::deploy::push_image_to_server),
         )
         .merge(Scalar::with_url("/scalar", ApiDoc::openapi()))
         .layer(

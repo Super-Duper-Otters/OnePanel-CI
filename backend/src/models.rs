@@ -95,3 +95,11 @@ pub struct DashboardResponse {
     pub message: String,
     pub data: Option<OsInfo>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct PushImageReq {
+    #[serde(rename = "serverId")]
+    pub server_id: i64,
+    #[serde(rename = "imageTag")]
+    pub image_tag: String,
+}

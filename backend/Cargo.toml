@@ -18,7 +18,7 @@ anyhow = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 walkdir = "2.5.0"
 md5 = "0.8.0"
-reqwest = { version = "0.13.1", features = ["json"] }
+reqwest = { version = "0.13.1", features = ["json", "multipart", "stream"] }
 sqlx = { version = "0.8.6", features = ["sqlite", "runtime-tokio-native-tls"] }
 bollard = "0.18"
 regex = "1.12.2"

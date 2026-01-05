@@ -29,6 +29,12 @@ pub struct ReadFileRequest {
     pub path: String,
 }
 
+#[derive(Serialize, Deserialize, ToSchema, Debug)]
+pub struct WriteFileRequest {
+    pub path: String,
+    pub content: String,
+}
+
 pub fn read_file(path_str: &str) -> Result<String, String> {
     let path = PathBuf::from(path_str);
     if !path.exists() {
