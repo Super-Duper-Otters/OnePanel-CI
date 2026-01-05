@@ -318,15 +318,6 @@
                     </div>
                 {/if}
             {/if}
-            <Button
-                variant="outline"
-                size="sm"
-                onclick={loadFiles}
-                disabled={loading}
-                title="Refresh"
-            >
-                <RefreshCw class={clsx("h-4 w-4", loading && "animate-spin")} />
-            </Button>
         </div>
     </div>
 

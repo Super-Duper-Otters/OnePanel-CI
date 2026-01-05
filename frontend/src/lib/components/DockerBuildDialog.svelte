@@ -42,7 +42,43 @@
                 `http://localhost:3000/api/docker/tags?image=${imageName}`,
             );
             if (res.ok) {
-                tags = await res.json();
+                const data: any[] = await res.json();
+                // data is DockerImage[]
+                const allTags = data.flatMap((d) => d.tags);
+                // Extract versions "verba-v2:1.0.0" -> "1.0.0"
+                const versions = allTags
+                    .map((t) => {
+                        const parts = t.split(":");
+                        return parts.length > 1 ? parts.pop() : "";
+                    })
+                    .filter((v) => v && v !== "latest");
+
+                tags = Array.from(new Set(versions)) as string[];
+
+                // Calculate next version
+                if (tags.length > 0) {
+                    try {
+                        // Simple semver sort
+                        const sorted = tags.sort((a, b) => {
+                            const pa = a.split(".").map(Number);
+                            const pb = b.split(".").map(Number);
+                            for (let i = 0; i < 3; i++) {
+                                if ((pa[i] || 0) > (pb[i] || 0)) return -1;
+                                if ((pa[i] || 0) < (pb[i] || 0)) return 1;
+                            }
+                            return 0;
+                        });
+
+                        const latest = sorted[0];
+                        const parts = latest.split(".").map(Number);
+                        if (parts.length >= 3 && !parts.some(isNaN)) {
+                            parts[2]++; // Increment patch
+                            version = parts.join(".");
+                        }
+                    } catch (e) {
+                        console.error("Error calculating next version", e);
+                    }
+                }
             }
         } catch (e) {
             console.error(e);
@@ -56,6 +92,9 @@
             toast.error($t("docker.build.version_required"));
             return;
         }
+        // Check exact tag match (image:version)
+        // We need to re-fetch or use parsed tags.
+        // If we only store "1.0.0" in tags, we can check that.
         if (tags.includes(version)) {
             toast.error($t("docker.build.version_exists", { version }));
             return;
@@ -75,7 +114,7 @@
 
             if (res.ok) {
                 const output = await res.text();
-                console.log(output); // Maybe show details?
+                // console.log(output);
                 toast.success(
                     $t("docker.build.success", { image: imageName, version }),
                 );
