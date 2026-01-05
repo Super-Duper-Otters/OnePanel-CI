@@ -53,23 +53,39 @@
                     })
                     .filter((v) => v && v !== "latest");
 
-                tags = Array.from(new Set(versions)) as string[];
+                // Sort versions descending semver
+                const uniqueVersions = Array.from(new Set(versions));
+                uniqueVersions.sort((a, b) => {
+                    // Try to parse as semantic version if possible
+                    // If not numeric, fallback to string compare
+                    const parse = (v: any) =>
+                        v
+                            .toString()
+                            .split(".")
+                            .map((p: any) => parseInt(p, 10));
+                    const pa = parse(a);
+                    const pb = parse(b);
+
+                    // Compare defined parts
+                    for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+                        const na = pa[i] !== undefined ? pa[i] : 0;
+                        const nb = pb[i] !== undefined ? pb[i] : 0;
+                        if (isNaN(na) || isNaN(nb)) {
+                            // Fallback legacy/string sort if not numbers
+                            return b.localeCompare(a);
+                        }
+                        if (na > nb) return -1;
+                        if (na < nb) return 1;
+                    }
+                    return 0;
+                });
+
+                tags = uniqueVersions as string[];
 
                 // Calculate next version
                 if (tags.length > 0) {
                     try {
-                        // Simple semver sort
-                        const sorted = tags.sort((a, b) => {
-                            const pa = a.split(".").map(Number);
-                            const pb = b.split(".").map(Number);
-                            for (let i = 0; i < 3; i++) {
-                                if ((pa[i] || 0) > (pb[i] || 0)) return -1;
-                                if ((pa[i] || 0) < (pb[i] || 0)) return 1;
-                            }
-                            return 0;
-                        });
-
-                        const latest = sorted[0];
+                        const latest = tags[0];
                         const parts = latest.split(".").map(Number);
                         if (parts.length >= 3 && !parts.some(isNaN)) {
                             parts[2]++; // Increment patch
@@ -92,16 +108,14 @@
             toast.error($t("docker.build.version_required"));
             return;
         }
-        // Check exact tag match (image:version)
-        // We need to re-fetch or use parsed tags.
-        // If we only store "1.0.0" in tags, we can check that.
         if (tags.includes(version)) {
             toast.error($t("docker.build.version_exists", { version }));
             return;
         }
 
-        loading = true;
-        try {
+        open = false; // Close immediately
+
+        const buildPromise = async () => {
             const res = await fetch("http://localhost:3000/api/docker/build", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -112,24 +126,23 @@
                 }),
             });
 
-            if (res.ok) {
-                const output = await res.text();
-                // console.log(output);
-                toast.success(
-                    $t("docker.build.success", { image: imageName, version }),
-                );
-                open = false;
-                onSuccess?.();
-            } else {
+            if (!res.ok) {
                 const err = await res.text();
-                toast.error($t("docker.build.failed", { error: err }));
+                throw new Error(err);
             }
-        } catch (e) {
-            console.error(e);
-            toast.error($t("docker.build.request_failed"));
-        } finally {
-            loading = false;
-        }
+            return res.text();
+        };
+
+        toast.promise(buildPromise(), {
+            loading: $t("docker.build.building"),
+            success: () => {
+                onSuccess?.();
+                return $t("docker.build.success")
+                    .replace("{image}", imageName)
+                    .replace("{version}", version);
+            },
+            error: (e) => $t("docker.build.failed", { error: e.message || e }),
+        });
     }
 </script>
 
