@@ -12,6 +12,7 @@
   import DirectoryList from "$lib/components/DirectoryList.svelte";
   import DirectoryDetail from "$lib/components/DirectoryDetail.svelte";
   import ServerList from "$lib/components/ServerList.svelte";
+  import ServerDetail from "$lib/components/ServerDetail.svelte";
   import DockerDashboard from "$lib/components/DockerDashboard.svelte";
   import { Settings, Plus } from "lucide-svelte";
   import SettingsDialog from "$lib/components/SettingsDialog.svelte";
@@ -25,20 +26,41 @@
 
   onMount(() => {
     const params = new URLSearchParams(window.location.search);
-    const tab = params.get("tab");
+    const view = params.get("view");
     const path = params.get("path");
-    if (tab) currentTab = tab;
+    const sId = params.get("serverId");
+
+    if (view) currentTab = view;
     if (path) selectedPath = path;
+    if (sId) {
+      // We need to restore the server object. Since we don't have the full object,
+      // we might need to fetch it or finding it in the list if loaded.
+      // For now, let's just assume we can pass the ID to ServerDetail or we find it in the list.
+      // Actually ServerDetail takes a full object. We should probably refactor ServerDetail to take ID.
+      // But to minimize changes, let's try to pass a skeleton or find it.
+      // Or simpler: Just store the ID and let ServerDetail fetch if needed?
+      // ServerDetail "overviewData" fetches by ID. But it displays "server.name".
+      // Let's mock the server object with just ID for now, as ServerDetail mostly uses ID.
+      selectedServer = { id: parseInt(sId), name: "Loading..." };
+    }
   });
 
   $effect(() => {
     const url = new URL(window.location.href);
-    url.searchParams.set("tab", currentTab);
+    url.searchParams.set("view", currentTab);
+
     if (selectedPath) {
       url.searchParams.set("path", selectedPath);
     } else {
       url.searchParams.delete("path");
     }
+
+    if (selectedServer) {
+      url.searchParams.set("serverId", selectedServer.id.toString());
+    } else {
+      url.searchParams.delete("serverId");
+    }
+
     window.history.replaceState({}, "", url);
   });
 
@@ -57,6 +79,16 @@
 
   function onRepoAdded() {
     refreshTrigger++;
+  }
+
+  let selectedServer = $state<any>(null);
+
+  function handleServerSelect(server: any) {
+    selectedServer = server;
+  }
+
+  function handleServerBack() {
+    selectedServer = null;
   }
 
   function onServerAdded() {
@@ -120,8 +152,13 @@
         {/if}
       </TabsContent>
       <TabsContent value="servers">
-        <!-- @ts-ignore -->
-        <ServerList bind:this={serverList} />
+        {#if selectedServer}
+          <!-- @ts-ignore -->
+          <ServerDetail server={selectedServer} onback={handleServerBack} />
+        {:else}
+          <!-- @ts-ignore -->
+          <ServerList bind:this={serverList} onselect={handleServerSelect} />
+        {/if}
       </TabsContent>
       <TabsContent value="docker">
         <DockerDashboard />

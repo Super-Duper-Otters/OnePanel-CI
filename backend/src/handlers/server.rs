@@ -123,6 +123,37 @@ pub async fn delete_server(
 
 #[utoipa::path(
     get,
+    path = "/api/servers/{id}",
+    params(
+        ("id" = i64, Path, description = "Server ID")
+    ),
+    responses(
+        (status = 200, description = "Get server details", body = ServerResponse),
+        (status = 404, description = "Server not found")
+    )
+)]
+pub async fn get_server(State(state): State<AppState>, Path(id): Path<i64>) -> impl IntoResponse {
+    let server = sqlx::query_as::<_, Server>("SELECT * FROM servers WHERE id = ?")
+        .bind(id)
+        .fetch_optional(&*state.db)
+        .await
+        .unwrap_or(None);
+
+    if let Some(s) = server {
+        let response = ServerResponse {
+            id: s.id,
+            name: s.name,
+            host: s.host,
+            port: s.port,
+        };
+        Json(response).into_response()
+    } else {
+        StatusCode::NOT_FOUND.into_response()
+    }
+}
+
+#[utoipa::path(
+    get,
     path = "/api/servers/{id}/status",
     params(
         ("id" = i64, Path, description = "Server ID")

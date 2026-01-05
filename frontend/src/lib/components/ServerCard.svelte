@@ -77,19 +77,31 @@
                 variant="ghost"
                 size="icon"
                 title={$t("servers.swagger") || "API Docs"}
-                onclick={() =>
-                    window.open(`/api/servers/${server.id}/docs`, "_blank")}
+                onclick={(e) => {
+                    e.stopPropagation();
+                    window.open(`/api/servers/${server.id}/docs`, "_blank");
+                }}
             >
                 <BookText size={20} />
             </Button>
-            <Button variant="ghost" size="icon" onclick={() => onedit(server)}>
+            <Button
+                variant="ghost"
+                size="icon"
+                onclick={(e) => {
+                    e.stopPropagation();
+                    onedit(server);
+                }}
+            >
                 <Edit size={20} />
             </Button>
             <Button
                 variant="ghost"
                 size="icon"
                 class="text-destructive"
-                onclick={() => ondelete(server.id)}
+                onclick={(e) => {
+                    e.stopPropagation();
+                    ondelete(server.id);
+                }}
             >
                 <Trash2 size={20} />
             </Button>

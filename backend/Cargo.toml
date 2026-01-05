@@ -13,7 +13,7 @@ git2 = "0.20"
 utoipa = { version = "5.3", features = ["axum_extras", "chrono"] }
 utoipa-scalar = { version = "0.3", features = ["axum"] }
 tracing = "0.1"
-tracing-subscriber = "0.3"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 anyhow = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 walkdir = "2.5.0"

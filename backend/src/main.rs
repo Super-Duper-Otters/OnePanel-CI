@@ -40,17 +40,22 @@ use state::AppState;
         handlers::server::delete_server,
         handlers::server::get_server_status,
         handlers::server::update_server,
+        handlers::server::get_server,
         handlers::docker::get_info,
+        handlers::container::list_containers,
+        handlers::container::operate_container,
+        handlers::container::get_logs,
     ),
     components(
-        schemas(CreateDirectoryRequest, DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, ReadFileRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest, CreateServerRequest, ServerResponse, DashboardResponse, OsInfo, Server, Repository, DockerInfo, docker::DockerImage)
+        schemas(CreateDirectoryRequest, DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, ReadFileRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest, CreateServerRequest, ServerResponse, DashboardResponse, OsInfo, Server, Repository, DockerInfo, docker::DockerImage, models::ContainerOperationReq)
     ),
     tags(
         (name = "directories", description = "Directory management endpoints"),
         (name = "fs", description = "File system endpoints"),
         (name = "git", description = "Git operations endpoints"),
         (name = "servers", description = "Server management endpoints"),
-        (name = "docker", description = "Docker endpoints")
+        (name = "docker", description = "Docker endpoints"),
+        (name = "Container", description = "1Panel Container management")
     )
 )]
 struct ApiDoc;
@@ -58,6 +63,10 @@ struct ApiDoc;
 #[tokio::main]
 async fn main() {
     tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "info,bollard=off".into()),
+        )
         .with(tracing_subscriber::fmt::layer())
         .init();
 
@@ -95,7 +104,8 @@ async fn main() {
         .route(
             "/api/servers/{id}",
             axum::routing::delete(handlers::server::delete_server)
-                .put(handlers::server::update_server),
+                .put(handlers::server::update_server)
+                .get(handlers::server::get_server),
         )
         .route(
             "/api/servers/{id}/status",
@@ -114,6 +124,18 @@ async fn main() {
         .route(
             "/api/docker/build",
             axum::routing::post(handlers::docker::build_image),
+        )
+        .route(
+            "/api/servers/{id}/containers",
+            get(handlers::container::list_containers),
+        )
+        .route(
+            "/api/servers/{id}/containers/operate",
+            axum::routing::post(handlers::container::operate_container),
+        )
+        .route(
+            "/api/servers/{id}/containers/logs",
+            get(handlers::container::get_logs),
         )
         .merge(Scalar::with_url("/scalar", ApiDoc::openapi()))
         .layer(

@@ -14,17 +14,19 @@
     } from "$lib/components/ui/dialog";
     import { Plus } from "lucide-svelte";
     import { t } from "svelte-i18n";
+    interface Server {
+        id: number;
+        name: string;
+        host: string;
+        port: number;
+        api_key?: string;
+    }
 
-    let servers = $state<
-        {
-            id: number;
-            name: string;
-            host: string;
-            port: number;
-            api_key?: string;
-        }[]
-    >([]);
+    let servers = $state<Server[]>([]);
     let open = $state(false);
+
+    let { onselect = () => {} }: { onselect?: (server: any) => void } =
+        $props();
 
     // Form State
     let editingId = $state<number | null>(null);
@@ -200,11 +202,25 @@
     {:else}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {#each servers as server}
-                <ServerCard
-                    {server}
-                    ondelete={deleteServer}
-                    onedit={openEditDialog}
-                />
+                <div
+                    class="cursor-pointer"
+                    onclick={() => onselect(server)}
+                    onkeydown={(e) => e.key === "Enter" && onselect(server)}
+                    role="button"
+                    tabindex="0"
+                >
+                    <ServerCard
+                        {server}
+                        ondelete={(id) => {
+                            // Stop propagation of click to create detail view if delete is clicked?
+                            // ServerCard implementation might need check.
+                            deleteServer(id);
+                        }}
+                        onedit={(s) => {
+                            openEditDialog(s);
+                        }}
+                    />
+                </div>
             {/each}
         </div>
     {/if}

@@ -229,6 +229,23 @@
             loadData();
         }
     });
+
+    let activeTab = $state("files");
+
+    onMount(() => {
+        const params = new URLSearchParams(window.location.search);
+        const t = params.get("tab");
+        if (t && ["files", "status", "log", "images"].includes(t)) {
+            activeTab = t;
+        }
+    });
+
+    function handleTabChange(val: string) {
+        activeTab = val;
+        const url = new URL(window.location.href);
+        url.searchParams.set("tab", val);
+        window.history.replaceState({}, "", url);
+    }
 </script>
 
 <div class="space-y-4">
@@ -282,7 +299,7 @@
         </div>
     </div>
 
-    <Tabs value="files" class="w-full">
+    <Tabs value={activeTab} class="w-full" onValueChange={handleTabChange}>
         <TabsList>
             <TabsTrigger value="files"
                 >{$t("directory.detail.files") || "Files"}</TabsTrigger

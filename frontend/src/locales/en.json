@@ -113,7 +113,43 @@
         "add_server_title": "Add New Server",
         "name": "Name",
         "no_servers": "No servers added. Add one to get started.",
-        "swagger": "API Documentation"
+        "swagger": "API Documentation",
+        "container_list": {
+            "title": "Container List",
+            "refresh": "Refresh",
+            "table": {
+                "status": "Status",
+                "name": "Name",
+                "image": "Image",
+                "ports": "Ports",
+                "actions": "Actions"
+            },
+            "status": {
+                "running": "Running",
+                "exited": "Exited",
+                "created": "Created",
+                "paused": "Paused"
+            },
+            "actions": {
+                "start": "Start",
+                "restart": "Restart",
+                "stop": "Stop",
+                "logs": "Logs"
+            },
+            "loading": "Loading...",
+            "no_containers": "No containers found or failed to load."
+        },
+        "detail": {
+            "overview": "Overview",
+            "containers": "Containers",
+            "system_info": "System Information",
+            "resources": "Resources",
+            "os": "OS",
+            "platform": "Platform",
+            "kernel": "Kernel",
+            "disk_available": "Available Disk",
+            "error_loading": "Error loading data"
+        }
     },
     "picker": {
         "title": "Browse Directory",

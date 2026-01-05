@@ -14,6 +14,30 @@ pub struct Server {
     // created_at is strictly DB managed for now, or fetch if needed
 }
 
+#[derive(Serialize, Deserialize, ToSchema, Debug, Clone)]
+pub struct Container {
+    pub id: String,
+    pub name: String,
+    pub image: String,
+    pub state: String,
+    pub status: String,
+    // Add more fields as we identify them from the 1Panel response
+    // For now, this is a best-guess structure
+}
+
+#[derive(Serialize, Deserialize, ToSchema, Debug)]
+pub struct ContainerOperationReq {
+    pub names: Vec<String>,
+    pub operation: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct InspectReq {
+    pub id: String,
+    #[serde(rename = "type")]
+    pub type_: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow, ToSchema)]
 pub struct Repository {
     pub id: i64,
