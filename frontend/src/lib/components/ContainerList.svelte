@@ -61,8 +61,7 @@
             toast.info(`Sending ${op} signal to ${name}...`);
             await operateContainer(serverId, [name], op);
             toast.success(`Successfully sent ${op} to ${name}`);
-            // Optional: refresh list or status if we had detailed status
-            // For now, maybe just wait a bit or do nothing?
+            await refresh();
         } catch (e) {
             toast.error(`Failed to ${op} ${name}`);
         }
@@ -165,17 +164,22 @@
                                 {/if}
                             </TableCell>
                             <TableCell class="text-right space-x-1">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    title={$t(
-                                        "servers.container_list.actions.start",
-                                    )}
-                                    onclick={() =>
-                                        handleOperate(container.name, "start")}
-                                >
-                                    <Play class="h-4 w-4 text-green-500" />
-                                </Button>
+                                {#if container.state !== "running"}
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        title={$t(
+                                            "servers.container_list.actions.start",
+                                        )}
+                                        onclick={() =>
+                                            handleOperate(
+                                                container.name,
+                                                "start",
+                                            )}
+                                    >
+                                        <Play class="h-4 w-4 text-green-500" />
+                                    </Button>
+                                {/if}
                                 <Button
                                     variant="ghost"
                                     size="icon"
@@ -190,17 +194,22 @@
                                 >
                                     <RotateCw class="h-4 w-4 text-blue-500" />
                                 </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    title={$t(
-                                        "servers.container_list.actions.stop",
-                                    )}
-                                    onclick={() =>
-                                        handleOperate(container.name, "stop")}
-                                >
-                                    <Square class="h-4 w-4 text-red-500" />
-                                </Button>
+                                {#if container.state === "running"}
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        title={$t(
+                                            "servers.container_list.actions.stop",
+                                        )}
+                                        onclick={() =>
+                                            handleOperate(
+                                                container.name,
+                                                "stop",
+                                            )}
+                                    >
+                                        <Square class="h-4 w-4 text-red-500" />
+                                    </Button>
+                                {/if}
                                 <Button
                                     variant="ghost"
                                     size="icon"
