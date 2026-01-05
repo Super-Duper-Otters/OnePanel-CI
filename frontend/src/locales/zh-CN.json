@@ -5,7 +5,8 @@
     "common": {
         "view": "查看",
         "actions": "操作",
-        "close": "关闭"
+        "close": "关闭",
+        "edit": "编辑"
     },
     "directory": {
         "add_title": "添加仓库",

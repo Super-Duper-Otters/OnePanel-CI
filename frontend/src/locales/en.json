@@ -5,7 +5,8 @@
     "common": {
         "view": "View",
         "actions": "Actions",
-        "close": "Close"
+        "close": "Close",
+        "edit": "Edit"
     },
     "directory": {
         "add_title": "Add Repository",

@@ -48,6 +48,7 @@ use state::AppState;
         handlers::deploy::push_image_to_server,
         handlers::compose::list_composes,
         handlers::compose::get_content,
+        handlers::compose::update_content,
     ),
     components(
         schemas(CreateDirectoryRequest, DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, ReadFileRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest, CreateServerRequest, ServerResponse, DashboardResponse, OsInfo, Server, Repository, DockerInfo, docker::DockerImage, models::ContainerOperationReq, models::PushImageReq, handlers::compose::GetContentReq)
@@ -147,6 +148,10 @@ async fn main() {
         .route(
             "/api/servers/{id}/composes/content",
             axum::routing::post(handlers::compose::get_content),
+        )
+        .route(
+            "/api/servers/{id}/composes/content/update",
+            axum::routing::post(handlers::compose::update_content),
         )
         .route(
             "/api/deploy/image",

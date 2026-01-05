@@ -127,7 +127,7 @@
                                     size="sm"
                                     onclick={() => openViewDialog(item)}
                                 >
-                                    {$t("common.view")}
+                                    {$t("common.edit")}
                                 </Button>
                             </Table.Cell>
                         </Table.Row>

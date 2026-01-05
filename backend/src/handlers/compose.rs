@@ -74,3 +74,49 @@ pub async fn get_content(
     }
     (StatusCode::NOT_FOUND, "Server not found").into_response()
 }
+
+#[derive(serde::Deserialize, utoipa::ToSchema)]
+pub struct UpdateContentReq {
+    pub path: String,
+    pub content: String,
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/servers/{id}/composes/content/update",
+    tag = "Compose",
+    request_body = UpdateContentReq,
+    params(
+        ("id" = i64, Path, description = "Server ID")
+    ),
+    responses(
+        (status = 200, description = "Content updated")
+    )
+)]
+pub async fn update_content(
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+    Json(payload): Json<UpdateContentReq>,
+) -> impl IntoResponse {
+    let server = sqlx::query_as::<_, Server>("SELECT * FROM servers WHERE id = ?")
+        .bind(id)
+        .fetch_optional(&*state.db)
+        .await
+        .unwrap_or(None);
+
+    if let Some(s) = server {
+        match OnePanelClient::save_file(
+            &s.host,
+            s.port,
+            &s.api_key,
+            &payload.path,
+            &payload.content,
+        )
+        .await
+        {
+            Ok(_) => return (StatusCode::OK, "Content updated").into_response(),
+            Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        }
+    }
+    (StatusCode::NOT_FOUND, "Server not found").into_response()
+}
