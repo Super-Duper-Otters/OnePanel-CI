@@ -119,3 +119,49 @@ export async function removeImage(serverId: number, id: string, force: boolean) 
         throw new Error(await res.text());
     }
 }
+
+export async function operateCompose(serverId: number, name: string, path: string, operation: string) {
+    const res = await fetch(`${API_BASE}/servers/${serverId}/composes/operate`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, path, operation }),
+    });
+    if (!res.ok) {
+        throw new Error(await res.text());
+    }
+}
+
+export async function getDockerConfig(path: string) {
+    const res = await fetch(`${API_BASE}/directories/config/get`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+}
+
+export async function updateDockerConfig(path: string, docker_image_name: string) {
+    const res = await fetch(`${API_BASE}/directories/config/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path, docker_image_name }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+}
+
+export interface ImageDeployment {
+    server_id: number;
+    server_name: string;
+    compose_name: string;
+    image_tag: string;
+}
+
+export async function getImageDeployments(imageBase: string): Promise<ImageDeployment[]> {
+    const res = await fetch(`${API_BASE}/image-deployments?image_base=${encodeURIComponent(imageBase)}`);
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+}
+

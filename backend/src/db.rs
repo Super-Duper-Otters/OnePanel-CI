@@ -31,12 +31,18 @@ pub async fn init_db() -> Result<DbPool, sqlx::Error> {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             path TEXT NOT NULL UNIQUE,
             name TEXT,
+            docker_image_name TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
         "#,
     )
     .execute(&pool)
     .await?;
+
+    // Migration for existing DB
+    let _ = sqlx::query("ALTER TABLE repositories ADD COLUMN docker_image_name TEXT")
+        .execute(&pool)
+        .await;
 
     Ok(pool)
 }

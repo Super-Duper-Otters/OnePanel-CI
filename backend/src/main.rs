@@ -30,6 +30,8 @@ use state::AppState;
         handlers::repository::list_repositories,
         handlers::repository::add_repository,
         handlers::repository::remove_repository,
+        handlers::repository::update_docker_config,
+        handlers::repository::get_docker_config,
         handlers::fs::list_directory,
         handlers::fs::scan_directory,
         handlers::fs::read_file,
@@ -51,9 +53,11 @@ use state::AppState;
         handlers::compose::update_content,
         handlers::image::list_images,
         handlers::image::remove_image,
+        handlers::compose::operate_compose,
+        handlers::image_deployments::get_image_deployments,
     ),
     components(
-        schemas(CreateDirectoryRequest, DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, ReadFileRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest, CreateServerRequest, ServerResponse, DashboardResponse, OsInfo, Server, Repository, DockerInfo, docker::DockerImage, models::ContainerOperationReq, models::PushImageReq, handlers::compose::GetContentReq)
+        schemas(CreateDirectoryRequest, DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, ReadFileRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest, CreateServerRequest, ServerResponse, DashboardResponse, OsInfo, Server, Repository, DockerInfo, docker::DockerImage, models::ContainerOperationReq, models::PushImageReq, handlers::compose::GetContentReq, handlers::compose::OperateComposeReq, handlers::image_deployments::ImageDeployment)
     ),
     tags(
         (name = "directories", description = "Directory management endpoints"),
@@ -85,6 +89,14 @@ async fn main() {
             get(handlers::repository::list_repositories)
                 .post(handlers::repository::add_repository)
                 .delete(handlers::repository::remove_repository),
+        )
+        .route(
+            "/api/directories/config/update",
+            axum::routing::post(handlers::repository::update_docker_config),
+        )
+        .route(
+            "/api/directories/config/get",
+            axum::routing::post(handlers::repository::get_docker_config),
         )
         .route(
             "/api/fs/list",
@@ -156,6 +168,10 @@ async fn main() {
             axum::routing::post(handlers::compose::update_content),
         )
         .route(
+            "/api/servers/{id}/composes/operate",
+            axum::routing::post(handlers::compose::operate_compose),
+        )
+        .route(
             "/api/servers/{id}/images",
             get(handlers::image::list_images),
         )
@@ -166,6 +182,10 @@ async fn main() {
         .route(
             "/api/deploy/image",
             axum::routing::post(handlers::deploy::push_image_to_server),
+        )
+        .route(
+            "/api/image-deployments",
+            get(handlers::image_deployments::get_image_deployments),
         )
         .merge(Scalar::with_url("/scalar", ApiDoc::openapi()))
         .layer(

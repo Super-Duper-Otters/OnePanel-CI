@@ -74,7 +74,8 @@
         "images": "镜像",
         "action": {
             "configure": "配置 Docker",
-            "build": "构建镜像"
+            "build": "构建镜像",
+            "deploy": "部署"
         },
         "tabs": {
             "images": "镜像列表"
@@ -83,11 +84,15 @@
             "title": "Docker 镜像",
             "refresh": "刷新",
             "no_images_found": "未找到镜像 {name}",
+            "deployed_to": "已部署到:",
+            "not_deployed": "未部署",
+            "deploying": "部署中...",
             "table": {
                 "tag": "标签",
                 "id": "镜像 ID",
                 "size": "大小",
-                "created": "创建时间"
+                "created": "创建时间",
+                "status": "部署状态"
             }
         },
         "config": {
@@ -112,6 +117,47 @@
             "building": "构建中...",
             "action": "构建并打标签"
         }
+    },
+    "deploy": {
+        "title": "部署服务",
+        "step1_title": "1. 选择镜像来源",
+        "source": {
+            "existing": "已有镜像",
+            "build": "构建新镜像"
+        },
+        "select_image_tag": "选择镜像标签",
+        "select_image_placeholder": "选择镜像...",
+        "version": "版本",
+        "checking_tags": "检查标签中...",
+        "existing_tags": "已有版本",
+        "build_action": "构建并选择",
+        "building": "构建中...",
+        "selected": "已选择",
+        "target_server": "目标服务器",
+        "select_server": "选择服务器...",
+        "target_compose": "目标编排文件",
+        "select_compose": "选择编排...",
+        "deploying_image": "正在部署",
+        "cancel": "取消",
+        "next_target": "下一步: 选择目标",
+        "back": "返回",
+        "start_deploy": "开始部署",
+        "close": "关闭",
+        "retry": "重试",
+        "status": {
+            "pushing": "推送镜像中",
+            "reading": "读取编排文件中",
+            "updating": "更新版本中",
+            "saving": "保存编排文件中",
+            "restarting": "重启服务中"
+        },
+        "success": "部署成功！",
+        "error": "错误",
+        "image_not_found": "在编排文件中找不到镜像 \"{image}\"",
+        "version_required": "请输入版本号",
+        "version_exists": "版本 {version} 已存在",
+        "build_success": "成功构建 {tag}",
+        "build_failed": "构建失败"
     },
     "servers": {
         "dashboard_title": "服务器面板",

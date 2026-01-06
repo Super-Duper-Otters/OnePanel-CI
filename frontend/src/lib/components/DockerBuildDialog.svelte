@@ -14,13 +14,13 @@
 
     let {
         open = $bindable(false),
-        imageName,
         path,
+        imageName = $bindable(""),
         onSuccess,
     } = $props<{
-        open?: boolean;
-        imageName: string;
+        open: boolean;
         path: string;
+        imageName: string;
         onSuccess?: () => void;
     }>();
 

@@ -122,3 +122,51 @@ pub async fn update_content(
     }
     (StatusCode::NOT_FOUND, "Server not found").into_response()
 }
+
+#[derive(serde::Deserialize, utoipa::ToSchema)]
+pub struct OperateComposeReq {
+    pub name: String,
+    pub operation: String,
+    pub path: String,
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/servers/{id}/composes/operate",
+    tag = "Compose",
+    request_body = OperateComposeReq,
+    params(
+        ("id" = i64, Path, description = "Server ID")
+    ),
+    responses(
+        (status = 200, description = "Operation successful")
+    )
+)]
+pub async fn operate_compose(
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+    Json(payload): Json<OperateComposeReq>,
+) -> impl IntoResponse {
+    let server = sqlx::query_as::<_, Server>("SELECT * FROM servers WHERE id = ?")
+        .bind(id)
+        .fetch_optional(&*state.db)
+        .await
+        .unwrap_or(None);
+
+    if let Some(s) = server {
+        match OnePanelClient::operate_compose(
+            &s.host,
+            s.port,
+            &s.api_key,
+            &payload.name,
+            &payload.path,
+            &payload.operation,
+        )
+        .await
+        {
+            Ok(_) => return (StatusCode::OK, "Operation successful").into_response(),
+            Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+        }
+    }
+    (StatusCode::NOT_FOUND, "Server not found").into_response()
+}

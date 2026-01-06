@@ -29,9 +29,15 @@
     } from "$lib/components/ui/dialog";
     import DockerConfigDialog from "./DockerConfigDialog.svelte";
     import DockerBuildDialog from "./DockerBuildDialog.svelte";
-    import DeployDialog from "./DeployDialog.svelte";
-    import { pushImage } from "$lib/api";
-    import { onDestroy } from "svelte";
+    import DeploymentWizard from "./DeploymentWizard.svelte";
+    import {
+        pushImage,
+        getDockerConfig,
+        updateDockerConfig,
+        getImageDeployments,
+        type ImageDeployment,
+    } from "$lib/api";
+
     import {
         File,
         Folder,
@@ -41,6 +47,9 @@
         Hammer,
         Upload,
         RefreshCw,
+        CheckCircle2,
+        Loader2,
+        Minus,
     } from "lucide-svelte";
     import { Badge } from "$lib/components/ui/badge";
     import { t } from "svelte-i18n";
@@ -98,6 +107,11 @@
     let deployDialogOpen = $state(false);
     let imageToDeploy = $state("");
 
+    // Deployment Status State
+    let deploymentStatus = $state<Map<string, ImageDeployment[]>>(new Map());
+    let loadingDeploymentStatus = $state(false);
+    let deployingImageTag = $state<string | null>(null);
+
     function openDeployDialog(imageTag: string) {
         imageToDeploy = imageTag;
         deployDialogOpen = true;
@@ -137,10 +151,14 @@
             await loadFiles(path);
 
             // Load Docker Config
-            const savedName = localStorage.getItem(`docker_image_${path}`);
-            if (savedName) {
-                dockerImageName = savedName;
-                loadImages();
+            try {
+                const config = await getDockerConfig(path);
+                if (config.docker_image_name) {
+                    dockerImageName = config.docker_image_name;
+                    loadImages();
+                }
+            } catch (e) {
+                console.error("Failed to load docker config", e);
             }
         } catch (e) {
             console.error(e);
@@ -180,12 +198,38 @@
             );
             if (res.ok) {
                 images = await res.json();
+                // Load deployment status after images are loaded
+                await loadDeploymentStatus();
             }
         } catch (e) {
             console.error(e);
         } finally {
             loadingImages = false;
         }
+    }
+
+    async function loadDeploymentStatus() {
+        if (!dockerImageName) return;
+        loadingDeploymentStatus = true;
+        try {
+            const deployments = await getImageDeployments(dockerImageName);
+            // Group by image tag
+            const statusMap = new Map<string, ImageDeployment[]>();
+            for (const d of deployments) {
+                const existing = statusMap.get(d.image_tag) || [];
+                existing.push(d);
+                statusMap.set(d.image_tag, existing);
+            }
+            deploymentStatus = statusMap;
+        } catch (e) {
+            console.error("Failed to load deployment status", e);
+        } finally {
+            loadingDeploymentStatus = false;
+        }
+    }
+
+    function getDeploymentsForTag(tag: string): ImageDeployment[] {
+        return deploymentStatus.get(tag) || [];
     }
 
     async function handleFileClick(file: FileEntry) {
@@ -240,7 +284,9 @@
     // Save image name when it changes
     $effect(() => {
         if (path && dockerImageName) {
-            localStorage.setItem(`docker_image_${path}`, dockerImageName);
+            updateDockerConfig(path, dockerImageName).catch((e) =>
+                console.error("Failed to save config", e),
+            );
         }
     });
 
@@ -315,17 +361,25 @@
                                 <Hammer class="h-4 w-4" />
                             </div>
                         </Button>
+                        <Button
+                            variant="default"
+                            size="sm"
+                            onclick={() => {
+                                imageToDeploy = "";
+                                deployDialogOpen = true;
+                            }}
+                        >
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">🚀</span>
+                                <span>{$t("docker.action.deploy")}</span>
+                                <Upload class="h-4 w-4" />
+                            </div>
+                        </Button>
                     </div>
                 {/if}
             {/if}
         </div>
     </div>
-
-    <DeployDialog
-        bind:open={deployDialogOpen}
-        imageTag={imageToDeploy}
-        onpush={handlePush}
-    />
 
     <Tabs value={activeTab} class="w-full" onValueChange={handleTabChange}>
         <TabsList>
@@ -546,6 +600,11 @@
                                         )}</TableHead
                                     >
                                     <TableHead
+                                        >{$t(
+                                            "docker.images_panel.table.status",
+                                        )}</TableHead
+                                    >
+                                    <TableHead
                                         >{$t("common.actions", {
                                             default: "Actions",
                                         })}</TableHead
@@ -588,6 +647,49 @@
                                                 image.created * 1000,
                                             ).toLocaleString()}</TableCell
                                         >
+                                        <TableCell>
+                                            {@const primaryTag =
+                                                image.tags[0] || ""}
+                                            {@const deploys =
+                                                getDeploymentsForTag(
+                                                    primaryTag,
+                                                )}
+                                            {@const isDeploying =
+                                                deployingImageTag ===
+                                                primaryTag}
+                                            {#if isDeploying || loadingDeploymentStatus}
+                                                <div
+                                                    class="flex items-center justify-center"
+                                                    title={$t(
+                                                        "docker.images_panel.deploying",
+                                                    )}
+                                                >
+                                                    <Loader2
+                                                        class="h-4 w-4 animate-spin text-blue-500"
+                                                    />
+                                                </div>
+                                            {:else if deploys.length > 0}
+                                                <div
+                                                    class="flex items-center justify-center cursor-help"
+                                                    title={`${$t("docker.images_panel.deployed_to")} ${deploys.map((d) => `${d.server_name} (${d.compose_name})`).join(", ")}`}
+                                                >
+                                                    <CheckCircle2
+                                                        class="h-4 w-4 text-green-500"
+                                                    />
+                                                </div>
+                                            {:else}
+                                                <div
+                                                    class="flex items-center justify-center"
+                                                    title={$t(
+                                                        "docker.images_panel.not_deployed",
+                                                    )}
+                                                >
+                                                    <Minus
+                                                        class="h-4 w-4 text-gray-400"
+                                                    />
+                                                </div>
+                                            {/if}
+                                        </TableCell>
                                         <TableCell>
                                             {#if image.tags.length > 0}
                                                 <Button
@@ -640,9 +742,20 @@
         {path}
         onSuccess={loadImages}
     />
-    <DeployDialog
+    <DeploymentWizard
         bind:open={deployDialogOpen}
         imageTag={imageToDeploy}
-        onpush={handlePush}
+        existingImages={images.flatMap((i) => i.tags)}
+        {path}
+        repoImageName={dockerImageName}
+        onDeployStart={(tag) => {
+            deployingImageTag = tag;
+        }}
+        onDeploySuccess={() => {
+            deployDialogOpen = false;
+            deployingImageTag = null;
+            // Refresh deployment status after successful deployment
+            loadDeploymentStatus();
+        }}
     />
 </div>

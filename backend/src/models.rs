@@ -43,6 +43,7 @@ pub struct Repository {
     pub id: i64,
     pub path: String,
     pub name: Option<String>,
+    pub docker_image_name: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, ToSchema)]
@@ -53,6 +54,7 @@ pub struct CreateDirectoryRequest {
 #[derive(Debug, Clone, Serialize, ToSchema)]
 pub struct DirectoryResponse {
     pub path: String,
+    pub docker_image_name: Option<String>,
     pub git_status: Option<crate::git::GitStatus>,
     pub error: Option<String>,
 }
@@ -102,4 +104,15 @@ pub struct PushImageReq {
     pub server_id: i64,
     #[serde(rename = "imageTag")]
     pub image_tag: String,
+}
+
+#[derive(Debug, Clone, Deserialize, ToSchema)]
+pub struct UpdateDockerConfigReq {
+    pub path: String,
+    pub docker_image_name: String,
+}
+
+#[derive(Debug, Clone, Deserialize, ToSchema)]
+pub struct GetDockerConfigReq {
+    pub path: String,
 }

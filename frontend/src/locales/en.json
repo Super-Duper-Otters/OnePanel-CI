@@ -74,7 +74,8 @@
         "images": "Images",
         "action": {
             "configure": "Configure Docker",
-            "build": "Build Image"
+            "build": "Build Image",
+            "deploy": "Deploy"
         },
         "tabs": {
             "images": "Images"
@@ -83,11 +84,15 @@
             "title": "Docker Images",
             "refresh": "Refresh",
             "no_images_found": "No images found for {name}",
+            "deployed_to": "Deployed to:",
+            "not_deployed": "Not deployed",
+            "deploying": "Deploying...",
             "table": {
                 "tag": "Tag",
                 "id": "Image ID",
                 "size": "Size",
-                "created": "Created"
+                "created": "Created",
+                "status": "Status"
             }
         },
         "config": {
@@ -112,6 +117,47 @@
             "building": "Building...",
             "action": "Build & Tag"
         }
+    },
+    "deploy": {
+        "title": "Deploy Service",
+        "step1_title": "1. Select Image Source",
+        "source": {
+            "existing": "Existing Image",
+            "build": "Build New Image"
+        },
+        "select_image_tag": "Select Image Tag",
+        "select_image_placeholder": "Select an image...",
+        "version": "Version",
+        "checking_tags": "Checking tags...",
+        "existing_tags": "Existing",
+        "build_action": "Build & Select",
+        "building": "Building...",
+        "selected": "Selected",
+        "target_server": "Target Server",
+        "select_server": "Select Server...",
+        "target_compose": "Target Compose File",
+        "select_compose": "Select Compose...",
+        "deploying_image": "Deploying",
+        "cancel": "Cancel",
+        "next_target": "Next: Select Target",
+        "back": "Back",
+        "start_deploy": "Start Deployment",
+        "close": "Close",
+        "retry": "Retry",
+        "status": {
+            "pushing": "Pushing Image",
+            "reading": "Reading Compose",
+            "updating": "Updating Version",
+            "saving": "Saving Compose",
+            "restarting": "Restarting Service"
+        },
+        "success": "Deployment successful!",
+        "error": "Error",
+        "image_not_found": "Could not find image \"{image}\" in compose file.",
+        "version_required": "Version required",
+        "version_exists": "Version {version} already exists",
+        "build_success": "Built {tag} successfully",
+        "build_failed": "Build failed"
     },
     "servers": {
         "dashboard_title": "Server Dashboard",
