@@ -189,6 +189,24 @@
             console.error(e);
         }
     }
+    // Helper to extract version from tag for sorting
+    function extractVersion(tag: string): number[] {
+        const version = tag.split(":").pop() || "";
+        if (version === "latest") return [Infinity, 0, 0]; // latest always first
+        return version.split(".").map((p) => parseInt(p, 10) || 0);
+    }
+
+    function compareVersions(a: string, b: string): number {
+        const va = extractVersion(a);
+        const vb = extractVersion(b);
+        for (let i = 0; i < Math.max(va.length, vb.length); i++) {
+            const na = va[i] ?? 0;
+            const nb = vb[i] ?? 0;
+            if (nb !== na) return nb - na; // descending
+        }
+        return 0;
+    }
+
     async function loadImages() {
         if (!dockerImageName) return;
         loadingImages = true;
@@ -197,7 +215,16 @@
                 `http://localhost:3000/api/docker/tags?image=${dockerImageName}`,
             );
             if (res.ok) {
-                images = await res.json();
+                const data = await res.json();
+                // Sort by created timestamp descending, then by version descending
+                images = data.sort((a: DockerImage, b: DockerImage) => {
+                    const timeDiff = b.created - a.created;
+                    if (timeDiff !== 0) return timeDiff;
+                    // If same creation time, sort by version
+                    const tagA = a.tags[0] || "";
+                    const tagB = b.tags[0] || "";
+                    return compareVersions(tagA, tagB);
+                });
                 // Load deployment status after images are loaded
                 await loadDeploymentStatus();
             }
