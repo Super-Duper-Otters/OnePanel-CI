@@ -601,7 +601,7 @@ impl OnePanelClient {
         path: &str,
         content: &str,
     ) -> Result<()> {
-        let timestamp = chrono::Utc::now().timestamp_millis();
+        let timestamp = Utc::now().timestamp();
         let host_clean = host.trim_end_matches('/');
         let client = reqwest::Client::new();
 
@@ -646,12 +646,79 @@ impl OnePanelClient {
         }
     }
 
+    pub async fn update_compose(
+        host: &str,
+        port: u16,
+        api_key: &str,
+        name: &str,
+        path: &str,
+        content: &str,
+    ) -> Result<()> {
+        let client = Client::builder()
+            .no_proxy()
+            .build()
+            .unwrap_or_else(|_| Client::new());
+
+        let timestamp = Utc::now().timestamp();
+        let api_key = api_key.trim();
+        let host_clean = host
+            .trim()
+            .trim_start_matches("http://")
+            .trim_start_matches("https://")
+            .trim_end_matches('/');
+
+        let token_raw = format!("1panel{}{}", api_key, timestamp);
+        let token_digest = md5::compute(token_raw.as_bytes());
+        let token_str = format!("{:x}", token_digest);
+
+        let url = format!(
+            "http://{}:{}/api/v1/containers/compose/update",
+            host_clean, port
+        );
+
+        let payload = serde_json::json!({
+            "name": name,
+            "path": path,
+            "content": content,
+            "env": []
+        });
+
+        let res = client
+            .post(&url)
+            .header("1Panel-Token", token_str)
+            .header("1Panel-Timestamp", timestamp.to_string())
+            .json(&payload)
+            .send()
+            .await?;
+
+        if res.status().is_success() {
+            let text = res.text().await?;
+            let json: serde_json::Value =
+                serde_json::from_str(&text).unwrap_or(serde_json::Value::Null);
+
+            if let Some(code) = json.get("code").and_then(|c| c.as_i64()) {
+                if code != 200 {
+                    let msg = json
+                        .get("message")
+                        .and_then(|m| m.as_str())
+                        .unwrap_or("Unknown error");
+                    return Err(anyhow!("API returned error code {}: {}", code, msg));
+                }
+            }
+            Ok(())
+        } else {
+            let status = res.status();
+            let body = res.text().await.unwrap_or_default();
+            Err(anyhow!("Update compose failed: {} - {}", status, body))
+        }
+    }
+
     pub async fn list_images(host: &str, port: u16, api_key: &str) -> Result<serde_json::Value> {
         let client = reqwest::Client::new();
         let host_clean = host
             .trim_start_matches("http://")
             .trim_start_matches("https://");
-        let timestamp = chrono::Local::now().timestamp_millis() / 1000;
+        let timestamp = Utc::now().timestamp();
 
         let token_raw = format!("1panel{}{}", api_key, timestamp);
         let token_digest = md5::compute(token_raw.as_bytes());
@@ -698,7 +765,7 @@ impl OnePanelClient {
         let host_clean = host
             .trim_start_matches("http://")
             .trim_start_matches("https://");
-        let timestamp = chrono::Local::now().timestamp_millis() / 1000;
+        let timestamp = Utc::now().timestamp();
 
         let token_raw = format!("1panel{}{}", api_key, timestamp);
         let token_digest = md5::compute(token_raw.as_bytes());

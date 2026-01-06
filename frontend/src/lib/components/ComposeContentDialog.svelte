@@ -50,7 +50,7 @@
     async function saveContent() {
         saving = true;
         try {
-            await updateComposeContent(serverId, path, content);
+            await updateComposeContent(serverId, name, path, content);
             toast.success($t("settings.save_success"));
             open = false;
         } catch (e: any) {

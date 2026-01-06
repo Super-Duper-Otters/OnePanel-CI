@@ -77,6 +77,7 @@ pub async fn get_content(
 
 #[derive(serde::Deserialize, utoipa::ToSchema)]
 pub struct UpdateContentReq {
+    pub name: String,
     pub path: String,
     pub content: String,
 }
@@ -105,10 +106,11 @@ pub async fn update_content(
         .unwrap_or(None);
 
     if let Some(s) = server {
-        match OnePanelClient::save_file(
+        match OnePanelClient::update_compose(
             &s.host,
             s.port,
             &s.api_key,
+            &payload.name,
             &payload.path,
             &payload.content,
         )

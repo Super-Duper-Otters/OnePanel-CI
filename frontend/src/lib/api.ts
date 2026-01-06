@@ -82,13 +82,17 @@ export async function getComposeContent(serverId: number, path: string) {
     return res.text();
 }
 
-export async function updateComposeContent(serverId: number, path: string, content: string) {
+export async function updateComposeContent(serverId: number, name: string, path: string, content: string) {
     const res = await fetch(`${API_BASE}/servers/${serverId}/composes/content/update`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({ path, content }),
+        body: JSON.stringify({
+            name: name ?? "",
+            path: path ?? "",
+            content: content ?? ""
+        }),
     });
     if (!res.ok) {
         throw new Error(await res.text());
