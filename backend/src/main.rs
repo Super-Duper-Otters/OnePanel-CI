@@ -271,6 +271,7 @@ async fn run_server() {
             "/api/image-deployments",
             get(handlers::image_deployments::get_image_deployments),
         )
+        .route("/api/version", get(handlers::version::get_version))
         .merge(Scalar::with_url("/scalar", ApiDoc::openapi()))
         .layer(
             CorsLayer::new()
@@ -282,6 +283,7 @@ async fn run_server() {
         .fallback(static_handler);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    println!("Starting OnePanel CI version: {}", env!("APP_VERSION"));
     println!("listening on {}", addr);
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();

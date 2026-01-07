@@ -18,13 +18,15 @@
   import SettingsDialog from "$lib/components/SettingsDialog.svelte";
   import AddDirectoryDialog from "$lib/components/AddDirectoryDialog.svelte";
   import AddServerDialog from "$lib/components/AddServerDialog.svelte";
+  import { getVersion } from "$lib/api";
 
   let settingsOpen = $state(false);
   let addRepoOpen = $state(false);
   let addServerOpen = $state(false);
   let currentTab = $state("repositories");
+  let appVersion = $state("");
 
-  onMount(() => {
+  onMount(async () => {
     const params = new URLSearchParams(window.location.search);
     const view = params.get("view");
     const path = params.get("path");
@@ -33,15 +35,14 @@
     if (view) currentTab = view;
     if (path) selectedPath = path;
     if (sId) {
-      // We need to restore the server object. Since we don't have the full object,
-      // we might need to fetch it or finding it in the list if loaded.
-      // For now, let's just assume we can pass the ID to ServerDetail or we find it in the list.
-      // Actually ServerDetail takes a full object. We should probably refactor ServerDetail to take ID.
-      // But to minimize changes, let's try to pass a skeleton or find it.
-      // Or simpler: Just store the ID and let ServerDetail fetch if needed?
-      // ServerDetail "overviewData" fetches by ID. But it displays "server.name".
-      // Let's mock the server object with just ID for now, as ServerDetail mostly uses ID.
       selectedServer = { id: parseInt(sId), name: "Loading..." };
+    }
+
+    try {
+      const v = await getVersion();
+      appVersion = v.version;
+    } catch (e) {
+      console.error("Failed to fetch version", e);
     }
   });
 
@@ -113,7 +114,16 @@
   <Toaster />
   <main class="container mx-auto py-8">
     <div class="flex justify-between items-center mb-8">
-      <h1 class="text-3xl font-bold">{$t("app.title")}</h1>
+      <div class="flex items-center gap-3">
+        <h1 class="text-3xl font-bold">{$t("app.title")}</h1>
+        {#if appVersion}
+          <div
+            class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold text-muted-foreground"
+          >
+            v{appVersion}
+          </div>
+        {/if}
+      </div>
       <Button variant="ghost" size="icon" onclick={() => (settingsOpen = true)}>
         <Settings class="h-5 w-5" />
       </Button>

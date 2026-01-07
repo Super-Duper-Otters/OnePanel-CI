@@ -8,3 +8,4 @@ pub mod image;
 pub mod image_deployments;
 pub mod repository;
 pub mod server;
+pub mod version;
