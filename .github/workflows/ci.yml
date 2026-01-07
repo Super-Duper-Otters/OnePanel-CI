@@ -39,6 +39,10 @@ jobs:
       with:
         version: 9
 
+    - name: Install Frontend Dependencies
+      working-directory: frontend
+      run: pnpm install
+
     - name: Build and Release
       run: cargo build --release --verbose
 
