@@ -594,6 +594,7 @@ impl OnePanelClient {
         }
     }
 
+    #[allow(dead_code)]
     pub async fn save_file(
         host: &str,
         port: u16,
