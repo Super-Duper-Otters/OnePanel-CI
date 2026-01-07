@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use image::{Rgba, RgbaImage};
+// use image::{Rgba, RgbaImage};
 use tray_icon::Icon;
 
 pub fn load_icon() -> Result<Icon> {
