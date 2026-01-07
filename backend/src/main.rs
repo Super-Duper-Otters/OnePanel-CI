@@ -1,4 +1,10 @@
-use axum::{routing::get, Router};
+use axum::{
+    http::{header, StatusCode, Uri},
+    response::{Html, IntoResponse, Response},
+    routing::get,
+    Router,
+};
+use rust_embed::RustEmbed;
 use std::net::SocketAddr;
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -79,6 +85,36 @@ use state::AppState;
     )
 )]
 struct ApiDoc;
+
+#[derive(RustEmbed)]
+#[folder = "../frontend/dist"]
+struct Assets;
+
+async fn static_handler(uri: Uri) -> impl IntoResponse {
+    let mut path = uri.path().trim_start_matches('/').to_string();
+
+    if path.is_empty() {
+        path = "index.html".to_string();
+    }
+
+    match Assets::get(&path) {
+        Some(content) => {
+            let mime = mime_guess::from_path(&path).first_or_octet_stream();
+            ([(header::CONTENT_TYPE, mime.as_ref())], content.data).into_response()
+        }
+        None => {
+            if path.contains('.') {
+                return (StatusCode::NOT_FOUND, "404 Not Found").into_response();
+            }
+            if let Some(content) = Assets::get("index.html") {
+                let mime = mime_guess::from_path("index.html").first_or_octet_stream();
+                ([(header::CONTENT_TYPE, mime.as_ref())], content.data).into_response()
+            } else {
+                (StatusCode::NOT_FOUND, "404 Not Found").into_response()
+            }
+        }
+    }
+}
 
 #[tokio::main]
 async fn main() {
@@ -233,7 +269,8 @@ async fn main() {
                 .allow_methods(Any)
                 .allow_headers(Any),
         )
-        .with_state(state);
+        .with_state(state)
+        .fallback(static_handler);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("listening on {}", addr);
