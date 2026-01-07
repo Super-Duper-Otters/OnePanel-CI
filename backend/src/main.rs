@@ -336,13 +336,13 @@ fn main() {
         if let Ok(event) = tray_channel.try_recv() {
             // On Windows, left click maps to different event than Mac/Linux potentially
             // But tray-icon 0.19 might abstract this.
-            // Generally, for cross-platform basic click:
+            // User requested to remove single click open functionality.
             match event {
-                tray_icon::TrayIconEvent::Click { button, .. } => {
-                    if button == tray_icon::MouseButton::Left {
-                        let _ = open::that("http://localhost:3000");
-                    }
-                }
+                // tray_icon::TrayIconEvent::Click { button, .. } => {
+                //     if button == tray_icon::MouseButton::Left {
+                //         let _ = open::that("http://localhost:3000");
+                //     }
+                // }
                 _ => {}
             }
         }

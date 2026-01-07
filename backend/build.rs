@@ -1,6 +1,12 @@
 use std::process::Command;
 
 fn main() {
+    if cfg!(target_os = "windows") {
+        let mut res = winres::WindowsResource::new();
+        res.set_icon("assets/icon.ico");
+        res.compile().unwrap();
+    }
+
     println!("cargo:rerun-if-changed=../frontend/src");
     println!("cargo:rerun-if-changed=../frontend/package.json");
     println!("cargo:rerun-if-changed=../frontend/vite.config.ts");
