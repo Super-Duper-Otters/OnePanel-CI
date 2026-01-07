@@ -51,3 +51,11 @@ jobs:
       with:
         name: onepanel-ci-windows
         path: target/release/OnePanel.exe
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: target/release/OnePanel.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
