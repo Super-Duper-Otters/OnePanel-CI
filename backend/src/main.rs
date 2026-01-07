@@ -1,3 +1,5 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 use axum::{
     http::{header, StatusCode, Uri},
     response::IntoResponse,
@@ -6,8 +8,14 @@ use axum::{
 };
 use rust_embed::RustEmbed;
 use std::net::SocketAddr;
+use std::thread;
+use tao::event_loop::{ControlFlow, EventLoop};
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use tray_icon::{
+    menu::{Menu, MenuItem},
+    TrayIconBuilder,
+};
 use utoipa::OpenApi;
 use utoipa_scalar::{Scalar, Servable};
 
@@ -16,6 +24,7 @@ mod docker;
 mod fs;
 mod git;
 mod handlers;
+mod icon;
 mod models;
 mod onepanel;
 mod state;
@@ -116,8 +125,8 @@ async fn static_handler(uri: Uri) -> impl IntoResponse {
     }
 }
 
-#[tokio::main]
-async fn main() {
+// Function to run the web server logic
+async fn run_server() {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -276,4 +285,66 @@ async fn main() {
     println!("listening on {}", addr);
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
+}
+
+fn main() {
+    let event_loop = EventLoop::new();
+
+    // Spawn server in a separate thread
+    thread::spawn(|| {
+        tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(run_server());
+    });
+
+    let tray_menu = Menu::new();
+    let quit_i = MenuItem::new("Quit", true, None);
+    let open_i = MenuItem::new("Open", true, None);
+    tray_menu.append_items(&[&open_i, &quit_i]).unwrap();
+
+    let icon = icon::load_icon().unwrap();
+
+    let mut _tray_icon = Some(
+        TrayIconBuilder::new()
+            .with_menu(Box::new(tray_menu))
+            .with_tooltip("OnePanel CI")
+            .with_icon(icon)
+            .build()
+            .unwrap(),
+    );
+
+    let menu_channel = tray_icon::menu::MenuEvent::receiver();
+    let tray_channel = tray_icon::TrayIconEvent::receiver();
+
+    // Open browser on startup
+    let _ = open::that("http://localhost:3000");
+
+    event_loop.run(move |_event, _, control_flow| {
+        *control_flow = ControlFlow::Wait;
+
+        if let Ok(event) = menu_channel.try_recv() {
+            if event.id == quit_i.id() {
+                _tray_icon.take();
+                *control_flow = ControlFlow::Exit;
+            } else if event.id == open_i.id() {
+                let _ = open::that("http://localhost:3000");
+            }
+        }
+
+        if let Ok(event) = tray_channel.try_recv() {
+            // On Windows, left click maps to different event than Mac/Linux potentially
+            // But tray-icon 0.19 might abstract this.
+            // Generally, for cross-platform basic click:
+            match event {
+                tray_icon::TrayIconEvent::Click { button, .. } => {
+                    if button == tray_icon::MouseButton::Left {
+                        let _ = open::that("http://localhost:3000");
+                    }
+                }
+                _ => {}
+            }
+        }
+    });
 }
