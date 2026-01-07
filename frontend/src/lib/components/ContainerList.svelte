@@ -8,13 +8,12 @@
     import type { Container } from "$lib/api";
     import { Button } from "$lib/components/ui/button";
     import {
-        Table,
-        TableBody,
-        TableCell,
-        TableHead,
-        TableHeader,
-        TableRow,
-    } from "$lib/components/ui/table";
+        Card,
+        CardContent,
+        CardHeader,
+        CardTitle,
+        CardDescription,
+    } from "$lib/components/ui/card";
     import { RefreshCw, Play, Square, RotateCw, FileText } from "lucide-svelte";
     import { toast } from "svelte-sonner";
     import {
@@ -23,6 +22,7 @@
         DialogHeader,
         DialogTitle,
     } from "$lib/components/ui/dialog";
+    import { Badge } from "$lib/components/ui/badge";
     import { t } from "svelte-i18n";
 
     let {
@@ -88,145 +88,120 @@
 </script>
 
 <div class="space-y-4">
-    <!-- Refresh button removed, handled by parent -->
-
-    <div class="border rounded-md">
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead
-                        >{$t("servers.container_list.table.status")}</TableHead
+    {#if loading && containers.length === 0}
+        <div class="text-center py-10 text-muted-foreground">
+            {$t("servers.container_list.loading")}
+        </div>
+    {:else if containers.length === 0}
+        <div class="text-center py-10 text-muted-foreground">
+            {$t("servers.container_list.no_containers")}
+        </div>
+    {:else}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {#each containers as container}
+                <Card>
+                    <CardHeader
+                        class="flex flex-row items-center justify-between space-y-0 pb-2"
                     >
-                    <TableHead
-                        >{$t("servers.container_list.table.name")}</TableHead
-                    >
-                    <TableHead
-                        >{$t("servers.container_list.table.image")}</TableHead
-                    >
-                    <TableHead
-                        >{$t("servers.container_list.table.ports")}</TableHead
-                    >
-                    <TableHead class="text-right"
-                        >{$t("servers.container_list.table.actions")}</TableHead
-                    >
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {#if containers.length === 0}
-                    <TableRow>
-                        <TableCell
-                            colspan={2}
-                            class="text-center h-24 text-muted-foreground"
-                        >
-                            {loading
-                                ? $t("servers.container_list.loading")
-                                : $t("servers.container_list.no_containers")}
-                        </TableCell>
-                    </TableRow>
-                {:else}
-                    {#each containers as container}
-                        <TableRow>
-                            <TableCell>
-                                <div
-                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {container.state ===
-                                    'running'
-                                        ? 'bg-green-100 text-green-800'
-                                        : 'bg-gray-100 text-gray-800'}"
-                                >
-                                    {container.state}
-                                </div>
-                            </TableCell>
-                            <TableCell class="font-medium"
-                                >{container.name}</TableCell
-                            >
-                            <TableCell
-                                class="truncate max-w-[200px]"
+                        <div class="space-y-1 overflow-hidden mr-2">
+                            <CardTitle title={container.name}>
+                                {container.name.replace(/^\//, "")}
+                            </CardTitle>
+                            <CardDescription
+                                class="truncate"
                                 title={container.imageName}
-                                >{container.imageName}</TableCell
                             >
-                            <TableCell>
-                                {#if container.ports && container.ports.length > 0}
-                                    <div
-                                        class="flex flex-col text-xs text-muted-foreground"
-                                    >
-                                        {#each container.ports.slice(0, 2) as port}
-                                            <span>{port}</span>
-                                        {/each}
-                                        {#if container.ports.length > 2}
-                                            <span
-                                                class="text-[10px] text-gray-400"
-                                                >+{container.ports.length - 2} more</span
-                                            >
-                                        {/if}
-                                    </div>
-                                {:else}
-                                    -
-                                {/if}
-                            </TableCell>
-                            <TableCell class="text-right space-x-1">
-                                {#if container.state !== "running"}
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        title={$t(
-                                            "servers.container_list.actions.start",
-                                        )}
-                                        onclick={() =>
-                                            handleOperate(
-                                                container.name,
-                                                "start",
-                                            )}
-                                    >
-                                        <Play class="h-4 w-4 text-green-500" />
-                                    </Button>
-                                {/if}
+                                {container.imageName}
+                            </CardDescription>
+                        </div>
+                        <div class="flex gap-1 shrink-0">
+                            {#if container.state !== "running"}
                                 <Button
                                     variant="ghost"
                                     size="icon"
                                     title={$t(
-                                        "servers.container_list.actions.restart",
+                                        "servers.container_list.actions.start",
                                     )}
                                     onclick={() =>
-                                        handleOperate(
-                                            container.name,
-                                            "restart",
-                                        )}
+                                        handleOperate(container.name, "start")}
                                 >
-                                    <RotateCw class="h-4 w-4 text-blue-500" />
+                                    <Play class="h-4 w-4 text-green-500" />
                                 </Button>
-                                {#if container.state === "running"}
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        title={$t(
-                                            "servers.container_list.actions.stop",
-                                        )}
-                                        onclick={() =>
-                                            handleOperate(
-                                                container.name,
-                                                "stop",
-                                            )}
-                                    >
-                                        <Square class="h-4 w-4 text-red-500" />
-                                    </Button>
-                                {/if}
+                            {/if}
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                title={$t(
+                                    "servers.container_list.actions.restart",
+                                )}
+                                onclick={() =>
+                                    handleOperate(container.name, "restart")}
+                            >
+                                <RotateCw class="h-4 w-4 text-blue-500" />
+                            </Button>
+                            {#if container.state === "running"}
                                 <Button
                                     variant="ghost"
                                     size="icon"
                                     title={$t(
-                                        "servers.container_list.actions.logs",
+                                        "servers.container_list.actions.stop",
                                     )}
-                                    onclick={() => handleLogs(container.name)}
+                                    onclick={() =>
+                                        handleOperate(container.name, "stop")}
                                 >
-                                    <FileText class="h-4 w-4" />
+                                    <Square class="h-4 w-4 text-red-500" />
                                 </Button>
-                            </TableCell>
-                        </TableRow>
-                    {/each}
-                {/if}
-            </TableBody>
-        </Table>
-    </div>
+                            {/if}
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                title={$t(
+                                    "servers.container_list.actions.logs",
+                                )}
+                                onclick={() => handleLogs(container.name)}
+                            >
+                                <FileText class="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center gap-2">
+                                <Badge
+                                    variant="outline"
+                                    class={container.state === "running"
+                                        ? "bg-green-100 text-green-800 border-green-200"
+                                        : "bg-gray-100 text-gray-800 border-gray-200"}
+                                >
+                                    {container.state}
+                                </Badge>
+                            </div>
+                            {#if container.ports && container.ports.length > 0}
+                                <div class="flex flex-wrap gap-1">
+                                    {#each container.ports.slice(0, 3) as port}
+                                        <Badge
+                                            variant="secondary"
+                                            class="font-mono text-xs"
+                                        >
+                                            {port}
+                                        </Badge>
+                                    {/each}
+                                    {#if container.ports.length > 3}
+                                        <Badge
+                                            variant="secondary"
+                                            class="font-mono text-xs"
+                                        >
+                                            +{container.ports.length - 3}
+                                        </Badge>
+                                    {/if}
+                                </div>
+                            {/if}
+                        </div>
+                    </CardContent>
+                </Card>
+            {/each}
+        </div>
+    {/if}
 
     <Dialog bind:open={logOpen}>
         <DialogContent class="max-w-4xl h-[80vh] flex flex-col">

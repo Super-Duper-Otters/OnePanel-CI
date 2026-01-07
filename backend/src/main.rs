@@ -44,6 +44,16 @@ use state::AppState;
         handlers::server::update_server,
         handlers::server::get_server,
         handlers::docker::get_info,
+        handlers::docker::list_tags,
+        handlers::docker::build_image,
+        handlers::docker::list_containers,
+        handlers::docker::start_container,
+        handlers::docker::stop_container,
+        handlers::docker::remove_container,
+        handlers::docker::get_container_logs,
+        handlers::docker::list_images,
+        handlers::docker::pull_image,
+        handlers::docker::remove_image,
         handlers::container::list_containers,
         handlers::container::operate_container,
         handlers::container::get_logs,
@@ -57,7 +67,7 @@ use state::AppState;
         handlers::image_deployments::get_image_deployments,
     ),
     components(
-        schemas(CreateDirectoryRequest, DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, ReadFileRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest, CreateServerRequest, ServerResponse, DashboardResponse, OsInfo, Server, Repository, DockerInfo, docker::DockerImage, models::ContainerOperationReq, models::PushImageReq, handlers::compose::GetContentReq, handlers::compose::OperateComposeReq, handlers::image_deployments::ImageDeployment)
+        schemas(CreateDirectoryRequest, DirectoryResponse, GitStatus, FileEntry, ListRequest, ScanRequest, ReadFileRequest, CommitInfo, FileStatus, GitLogRequest, GitStatusRequest, CreateServerRequest, ServerResponse, DashboardResponse, OsInfo, Server, Repository, DockerInfo, docker::DockerImage, docker::ContainerSummary, docker::PullImageRequest, models::ContainerOperationReq, models::PushImageReq, handlers::compose::GetContentReq, handlers::compose::OperateComposeReq, handlers::image_deployments::ImageDeployment)
     ),
     tags(
         (name = "directories", description = "Directory management endpoints"),
@@ -139,6 +149,35 @@ async fn main() {
         )
         .route("/api/docker/info", get(handlers::docker::get_info))
         .route("/api/docker/tags", get(handlers::docker::list_tags))
+        .route(
+            "/api/docker/containers",
+            get(handlers::docker::list_containers),
+        )
+        .route(
+            "/api/docker/containers/{id}/start",
+            axum::routing::post(handlers::docker::start_container),
+        )
+        .route(
+            "/api/docker/containers/{id}/stop",
+            axum::routing::post(handlers::docker::stop_container),
+        )
+        .route(
+            "/api/docker/containers/{id}/logs",
+            get(handlers::docker::get_container_logs),
+        )
+        .route(
+            "/api/docker/containers/{id}",
+            axum::routing::delete(handlers::docker::remove_container),
+        )
+        .route("/api/docker/images", get(handlers::docker::list_images))
+        .route(
+            "/api/docker/images/pull",
+            axum::routing::post(handlers::docker::pull_image),
+        )
+        .route(
+            "/api/docker/images/{id}",
+            axum::routing::delete(handlers::docker::remove_image),
+        )
         .route(
             "/api/docker/build",
             axum::routing::post(handlers::docker::build_image),

@@ -135,6 +135,7 @@ dependencies = [
  "axum",
  "bollard",
  "chrono",
+ "futures-util",
  "git2",
  "md5",
  "regex",

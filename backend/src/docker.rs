@@ -119,3 +119,155 @@ pub async fn build_image(req: DockerBuildRequest) -> Result<String, String> {
         Err(String::from_utf8_lossy(&output.stderr).to_string())
     }
 }
+
+#[derive(Serialize, Deserialize, ToSchema, Debug)]
+pub struct ContainerSummary {
+    pub id: String,
+    pub names: Vec<String>,
+    pub image: String,
+    pub state: String,
+    pub status: String,
+}
+
+pub async fn list_containers() -> Result<Vec<ContainerSummary>, String> {
+    let docker = Docker::connect_with_local_defaults().map_err(|e| e.to_string())?;
+    use bollard::container::ListContainersOptions;
+    let options = ListContainersOptions::<String> {
+        all: true,
+        ..Default::default()
+    };
+
+    let containers = docker
+        .list_containers(Some(options))
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let result = containers
+        .into_iter()
+        .map(|c| ContainerSummary {
+            id: c.id.unwrap_or_default().chars().take(12).collect(),
+            names: c.names.unwrap_or_default(),
+            image: c.image.unwrap_or_default(),
+            state: c.state.unwrap_or_default(),
+            status: c.status.unwrap_or_default(),
+        })
+        .collect();
+
+    Ok(result)
+}
+
+pub async fn start_container(id: &str) -> Result<(), String> {
+    let docker = Docker::connect_with_local_defaults().map_err(|e| e.to_string())?;
+    docker
+        .start_container::<String>(id, None)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+pub async fn stop_container(id: &str) -> Result<(), String> {
+    let docker = Docker::connect_with_local_defaults().map_err(|e| e.to_string())?;
+    docker
+        .stop_container(id, None)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+pub async fn remove_container(id: &str) -> Result<(), String> {
+    let docker = Docker::connect_with_local_defaults().map_err(|e| e.to_string())?;
+    docker
+        .remove_container(
+            id,
+            Some(bollard::container::RemoveContainerOptions {
+                force: true,
+                ..Default::default()
+            }),
+        )
+        .await
+        .map_err(|e| e.to_string())
+}
+
+pub async fn get_container_logs(id: &str) -> Result<String, String> {
+    let docker = Docker::connect_with_local_defaults().map_err(|e| e.to_string())?;
+    use bollard::container::LogsOptions;
+    use futures_util::TryStreamExt;
+
+    let options = Some(LogsOptions::<String> {
+        stdout: true,
+        stderr: true,
+        tail: "100".to_string(), // Get last 100 lines
+        ..Default::default()
+    });
+
+    let streams = docker.logs(id, options);
+    // Accumulate the logs
+    let mut logs = String::new();
+    let mut stream = streams;
+
+    while let Ok(Some(output)) = stream.try_next().await {
+        logs.push_str(&output.to_string());
+    }
+
+    Ok(logs)
+}
+
+#[derive(Serialize, Deserialize, ToSchema, Debug)]
+pub struct PullImageRequest {
+    pub image: String,
+}
+
+pub async fn pull_image(image_name: &str) -> Result<(), String> {
+    let docker = Docker::connect_with_local_defaults().map_err(|e| e.to_string())?;
+    use bollard::image::CreateImageOptions;
+    use futures_util::TryStreamExt;
+
+    let options = Some(CreateImageOptions {
+        from_image: image_name,
+        ..Default::default()
+    });
+
+    // Create the image (pull)
+    let mut stream = docker.create_image(options, None, None);
+
+    // Drive the stream to completion
+    while let Ok(Some(_)) = stream.try_next().await {
+        // We could forward progress here if we had a websocket
+    }
+
+    Ok(())
+}
+
+pub async fn remove_image(id: &str) -> Result<(), String> {
+    let docker = Docker::connect_with_local_defaults().map_err(|e| e.to_string())?;
+    docker
+        .remove_image(id, None, None)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+pub async fn list_images() -> Result<Vec<DockerImage>, String> {
+    let docker = Docker::connect_with_local_defaults().map_err(|e| e.to_string())?;
+    use bollard::image::ListImagesOptions;
+
+    let options = ListImagesOptions::<String> {
+        ..Default::default()
+    };
+
+    let images = docker
+        .list_images(Some(options))
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let mut result = Vec::new();
+    for image in images {
+        result.push(DockerImage {
+            id: image.id.replace("sha256:", "").chars().take(12).collect(),
+            tags: image.repo_tags,
+            created: image.created,
+            size: image.size,
+        });
+    }
+
+    Ok(result)
+}

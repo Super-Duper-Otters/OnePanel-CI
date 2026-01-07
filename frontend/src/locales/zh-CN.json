@@ -6,7 +6,8 @@
         "view": "查看",
         "actions": "操作",
         "close": "关闭",
-        "edit": "编辑"
+        "edit": "编辑",
+        "back": "返回"
     },
     "directory": {
         "add_title": "添加仓库",
@@ -77,11 +78,25 @@
             "build": "构建镜像",
             "deploy": "部署"
         },
+        "container_table": {
+            "id": "ID",
+            "names": "名称",
+            "image": "镜像",
+            "state": "状态",
+            "status": "详情",
+            "operation_failed": "操作失败",
+            "failed_logs": "加载日志失败",
+            "confirm_remove": "确定要删除该容器吗？",
+            "remove_success": "容器删除成功",
+            "remove_failed": "删除容器失败",
+            "no_logs": "无可用日志",
+            "no_containers": "未找到容器"
+        },
         "tabs": {
             "images": "镜像列表"
         },
         "images_panel": {
-            "title": "Docker 镜像",
+            "title": "镜像",
             "refresh": "刷新",
             "no_images_found": "未找到镜像 {name}",
             "deployed_to": "已部署到:",
@@ -93,7 +108,14 @@
                 "size": "大小",
                 "created": "创建时间",
                 "status": "部署状态"
-            }
+            },
+            "pull_image": "拉取镜像",
+            "image_name": "镜像名称",
+            "pull": "拉取",
+            "confirm_remove": "确定要删除该镜像吗？",
+            "remove_failed": "删除镜像失败",
+            "pull_failed": "拉取镜像失败",
+            "no_images_found_generic": "暂无镜像"
         },
         "config": {
             "title": "Docker 配置",

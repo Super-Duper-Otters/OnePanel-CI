@@ -6,7 +6,8 @@
         "view": "View",
         "actions": "Actions",
         "close": "Close",
-        "edit": "Edit"
+        "edit": "Edit",
+        "back": "Back"
     },
     "directory": {
         "add_title": "Add Repository",
@@ -77,11 +78,25 @@
             "build": "Build Image",
             "deploy": "Deploy"
         },
+        "container_table": {
+            "id": "ID",
+            "names": "Names",
+            "image": "Image",
+            "state": "State",
+            "status": "Status",
+            "operation_failed": "Operation failed",
+            "failed_logs": "Failed to load logs",
+            "confirm_remove": "Are you sure you want to remove this container?",
+            "remove_success": "Container removed successfully",
+            "remove_failed": "Failed to remove container",
+            "no_logs": "No logs available",
+            "no_containers": "No containers found"
+        },
         "tabs": {
             "images": "Images"
         },
         "images_panel": {
-            "title": "Docker Images",
+            "title": "Images",
             "refresh": "Refresh",
             "no_images_found": "No images found for {name}",
             "deployed_to": "Deployed to:",
@@ -93,7 +108,14 @@
                 "size": "Size",
                 "created": "Created",
                 "status": "Status"
-            }
+            },
+            "pull_image": "Pull Image",
+            "image_name": "Image Name",
+            "pull": "Pull",
+            "confirm_remove": "Are you sure you want to remove this image?",
+            "remove_failed": "Failed to remove image",
+            "pull_failed": "Failed to pull image",
+            "no_images_found_generic": "No images found"
         },
         "config": {
             "title": "Docker Configuration",
