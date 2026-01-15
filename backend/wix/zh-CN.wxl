@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="zh-CN" xmlns="http://schemas.microsoft.com/wix/2006/localization">
+    <String Id="WelcomeDlgTitle">{\WixUI_Font_Title}欢迎使用 [ProductName] 安装向导</String>
+    <String Id="WelcomeDlgDescription">安装向导将在您的计算机上安装 [ProductName]。点击"下一步"继续，或点击"取消"退出安装向导。</String>
+    <String Id="InstallDirDlgTitle">{\WixUI_Font_Title}选择安装位置</String>
+    <String Id="InstallDirDlgDescription">安装向导将把 [ProductName] 安装到以下文件夹。</String>
+    <String Id="InstallDirDlgBrowse">浏览...</String>
+    <String Id="InstallDirDlgChange">更改...</String>
+    <String Id="CustomizeDlgTitle">{\WixUI_Font_Title}自定义安装</String>
+    <String Id="CustomizeDlgDescription">选择要安装的功能。</String>
+    <String Id="VerifyReadyDlgTitle">{\WixUI_Font_Title}准备安装</String>
+    <String Id="VerifyReadyDlgDescription">点击"安装"开始安装。如果您想更改设置，请点击"上一步"。</String>
+    <String Id="DiskCostDlgTitle">{\WixUI_Font_Title}磁盘空间要求</String>
+    <String Id="DiskCostDlgDescription">以下是各磁盘驱动器的空间使用情况。</String>
+    <String Id="BrowseDlgDescription">选择安装目标目录。</String>
+    <String Id="ExitDlgTitle">{\WixUI_Font_Title}安装完成</String>
+    <String Id="ExitDlgDescription">[ProductName] 安装向导已成功完成。</String>
+    <String Id="PrepareDlgTitle">{\WixUI_Font_Title}准备安装</String>
+    <String Id="PrepareDlgDescription">安装向导正在准备安装。</String>
+    <String Id="ProgressDlgTitle">{\WixUI_Font_Title}正在安装</String>
+    <String Id="ProgressDlgDescription">安装向导正在安装 [ProductName]，请稍候。</String>
+    <String Id="MaintenanceTypeDlgTitle">{\WixUI_Font_Title}维护类型</String>
+    <String Id="MaintenanceTypeDlgDescription">选择您想要执行的操作。</String>
+    <String Id="ResumeDlgTitle">{\WixUI_Font_Title}恢复安装</String>
+    <String Id="ResumeDlgDescription">安装向导将继续 [ProductName] 的安装。</String>
+    <String Id="UserExitDlgTitle">{\WixUI_Font_Title}安装被取消</String>
+    <String Id="UserExitDlgDescription">[ProductName] 安装被用户取消。您的系统未被修改。</String>
+    <String Id="FatalErrorDlgTitle">{\WixUI_Font_Title}安装失败</String>
+    <String Id="FatalErrorDlgDescription">[ProductName] 安装过程中发生错误。您的系统未被修改。</String>
+    
+    <!-- 按钮文本 -->
+    <String Id="WixUIBack">上一步(&amp;B)</String>
+    <String Id="WixUINext">下一步(&amp;N)</String>
+    <String Id="WixUICancel">取消</String>
+    <String Id="WixUIInstall">安装(&amp;I)</String>
+    <String Id="WixUIFinish">完成(&amp;F)</String>
+    <String Id="WixUIBrowse">浏览(&amp;R)...</String>
+    <String Id="WixUIRemove">删除(&amp;R)</String>
+    <String Id="WixUIRepair">修复(&amp;E)</String>
+    <String Id="WixUIModify">修改(&amp;M)</String>
+    <String Id="WixUIChange">更改(&amp;C)...</String>
+    <String Id="WixUIReset">重置(&amp;S)</String>
+    <String Id="WixUIDiskCost">磁盘空间(&amp;D)</String>
+    <String Id="WixUIYes">是(&amp;Y)</String>
+    <String Id="WixUINo">否(&amp;N)</String>
+    <String Id="WixUIOK">确定</String>
+    <String Id="WixUIRetry">重试(&amp;R)</String>
+    <String Id="WixUIIgnore">忽略(&amp;I)</String>
+    <String Id="WixUIAbort">中止(&amp;A)</String>
+    <String Id="WixUIPrinterName">打印机名称：</String>
+    <String Id="WixUIPrint">打印(&amp;P)</String>
+    
+    <!-- 功能描述 -->
+    <String Id="FeatureTitle">功能</String>
+    <String Id="FeatureDescription">选择要安装的功能。</String>
+</WixLocalization>
