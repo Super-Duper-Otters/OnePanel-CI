@@ -120,6 +120,15 @@ export async function removeImage(serverId: number, id: string, force: boolean) 
     }
 }
 
+export async function removeLocalImage(id: string) {
+    const res = await fetch(`${API_BASE}/docker/images/${id}`, {
+        method: "DELETE",
+    });
+    if (!res.ok) {
+        throw new Error(await res.text());
+    }
+}
+
 export async function operateCompose(serverId: number, name: string, path: string, operation: string) {
     const res = await fetch(`${API_BASE}/servers/${serverId}/composes/operate`, {
         method: "POST",

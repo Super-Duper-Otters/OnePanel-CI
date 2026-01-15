@@ -50,6 +50,8 @@
         CheckCircle2,
         Loader2,
         Minus,
+        Trash2,
+        Eraser,
     } from "lucide-svelte";
     import { Badge } from "$lib/components/ui/badge";
     import { t } from "svelte-i18n";
@@ -81,6 +83,7 @@
         tags: string[];
         created: number;
         size: number;
+        is_used: boolean;
     }
 
     let commits = $state<CommitInfo[]>([]);
@@ -108,6 +111,65 @@
     // Push State
     let deployDialogOpen = $state(false);
     let imageToDeploy = $state("");
+
+    // Batch Action State
+    let selectedImages = $state<Set<string>>(new Set());
+    let batchDeleting = $state(false);
+    let deleteDialogOpen = $state(false);
+
+    import { Checkbox } from "$lib/components/ui/checkbox";
+    import * as AlertDialog from "$lib/components/ui/alert-dialog";
+    import { removeLocalImage } from "$lib/api"; // Updated import
+
+    function handleSelect(id: string, checked: boolean) {
+        const newSelected = new Set(selectedImages);
+        if (checked) {
+            newSelected.add(id);
+        } else {
+            newSelected.delete(id);
+        }
+        selectedImages = newSelected;
+    }
+
+    function selectUnused() {
+        if (!images) return;
+        selectedImages = new Set(
+            // Use is_used from the backend API, assuming the backend update applied correctly
+            // Note: The interface DockerImage needs to update to include is_used
+            images.filter((i) => !i.is_used).map((i) => i.id),
+        );
+    }
+
+    async function executeBatchDelete() {
+        if (selectedImages.size === 0) return;
+        batchDeleting = true;
+        const toDelete = Array.from(selectedImages);
+        const chunkSize = 5;
+
+        try {
+            for (let i = 0; i < toDelete.length; i += chunkSize) {
+                const chunk = toDelete.slice(i, i + chunkSize);
+                await Promise.all(chunk.map((id) => removeLocalImage(id)));
+            }
+            toast.success($t("servers.images.remove_success"));
+            await loadImages();
+            selectedImages = new Set();
+        } catch (error: any) {
+            console.error(error);
+            toast.error(
+                $t("servers.images.remove_error") + ": " + error.message,
+            );
+        } finally {
+            batchDeleting = false;
+            deleteDialogOpen = false;
+        }
+    }
+
+    function openDeleteDialog() {
+        if (selectedImages.size > 0) {
+            deleteDialogOpen = true;
+        }
+    }
 
     // Deployment Status State
     let deploymentStatus = $state<Map<string, ImageDeployment[]>>(new Map());
@@ -614,13 +676,30 @@
                     {:else if images.length === 0}
                         <div class="text-muted-foreground">
                             {$t("docker.images_panel.no_images_found", {
-                                name: dockerImageName,
+                                values: { name: dockerImageName },
                             })}
                         </div>
                     {:else}
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead class="w-[50px]">
+                                        <Checkbox
+                                            checked={images.length > 0 &&
+                                                selectedImages.size ===
+                                                    images.length}
+                                            onCheckedChange={(v) => {
+                                                if (v) {
+                                                    selectedImages = new Set(
+                                                        images.map((i) => i.id),
+                                                    );
+                                                } else {
+                                                    selectedImages = new Set();
+                                                }
+                                            }}
+                                            disabled={images.length === 0}
+                                        />
+                                    </TableHead>
                                     <TableHead
                                         >{$t(
                                             "docker.images_panel.table.tag",
@@ -646,16 +725,59 @@
                                             "docker.images_panel.table.status",
                                         )}</TableHead
                                     >
-                                    <TableHead
-                                        >{$t("common.actions", {
-                                            default: "Actions",
-                                        })}</TableHead
-                                    >
+                                    <TableHead class="text-right">
+                                        <div
+                                            class="flex items-center justify-end gap-2"
+                                        >
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onclick={selectUnused}
+                                                title={$t(
+                                                    "docker.images_panel.select_unused",
+                                                ) || "Select Unused"}
+                                            >
+                                                <Eraser
+                                                    class="h-4 w-4 text-muted-foreground hover:text-foreground"
+                                                />
+                                            </Button>
+                                            {#if selectedImages.size > 0}
+                                                <Button
+                                                    size="sm"
+                                                    variant="destructive"
+                                                    onclick={openDeleteDialog}
+                                                    disabled={batchDeleting}
+                                                >
+                                                    {#if batchDeleting}
+                                                        <Loader2
+                                                            class="h-4 w-4 animate-spin"
+                                                        />
+                                                    {:else}
+                                                        <Trash2
+                                                            class="h-4 w-4"
+                                                        />
+                                                    {/if}
+                                                </Button>
+                                            {/if}
+                                        </div>
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {#each images as image}
                                     <TableRow>
+                                        <TableCell>
+                                            <Checkbox
+                                                checked={selectedImages.has(
+                                                    image.id,
+                                                )}
+                                                onCheckedChange={(v) =>
+                                                    handleSelect(
+                                                        image.id,
+                                                        v as boolean,
+                                                    )}
+                                            />
+                                        </TableCell>
                                         <TableCell class="font-medium">
                                             <div class="flex flex-wrap gap-1">
                                                 {#each image.tags as tag}
@@ -805,4 +927,31 @@
             loadDeploymentStatus();
         }}
     />
+
+    <AlertDialog.Root bind:open={deleteDialogOpen}>
+        <AlertDialog.Content>
+            <AlertDialog.Header>
+                <AlertDialog.Title
+                    >{$t("common.confirm_delete") ||
+                        "Are you sure?"}</AlertDialog.Title
+                >
+                <AlertDialog.Description>
+                    {$t("docker.images_panel.confirm_batch_remove", {
+                        values: { count: selectedImages.size },
+                    }) || `Delete ${selectedImages.size} images?`}
+                </AlertDialog.Description>
+            </AlertDialog.Header>
+            <AlertDialog.Footer>
+                <AlertDialog.Cancel
+                    >{$t("common.cancel") || "Cancel"}</AlertDialog.Cancel
+                >
+                <AlertDialog.Action
+                    class="bg-red-500 hover:bg-red-600"
+                    onclick={executeBatchDelete}
+                >
+                    {$t("common.delete") || "Delete"}
+                </AlertDialog.Action>
+            </AlertDialog.Footer>
+        </AlertDialog.Content>
+    </AlertDialog.Root>
 </div>

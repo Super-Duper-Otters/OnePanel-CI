@@ -70,14 +70,44 @@ pub async fn list_tags(image_name: &str) -> Result<Vec<DockerImage>, String> {
         .await
         .map_err(|e| e.to_string())?;
 
+    // Check usage
+    use bollard::container::ListContainersOptions;
+    let container_options = ListContainersOptions::<String> {
+        all: true,
+        ..Default::default()
+    };
+    let containers = docker
+        .list_containers(Some(container_options))
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let mut used_images = std::collections::HashSet::new();
+    for container in containers {
+        if let Some(image_id) = container.image_id {
+            used_images.insert(
+                image_id
+                    .replace("sha256:", "")
+                    .chars()
+                    .take(12)
+                    .collect::<String>(),
+            );
+            used_images.insert(container.image.unwrap_or_default());
+        }
+    }
+
     let mut result = Vec::new();
     for image in images {
+        let id_short: String = image.id.replace("sha256:", "").chars().take(12).collect();
+        // Check if any tag matches used images or ID matches
+        let is_used = used_images.contains(&id_short)
+            || image.repo_tags.iter().any(|tag| used_images.contains(tag));
+
         result.push(DockerImage {
-            id: image.id.replace("sha256:", "").chars().take(12).collect(),
+            id: id_short,
             tags: image.repo_tags,
             created: image.created,
             size: image.size,
-            is_used: false, // Default to false for tags list, or we could check usage here too but less critical
+            is_used,
         });
     }
 
