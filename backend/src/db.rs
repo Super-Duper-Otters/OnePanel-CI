@@ -44,5 +44,13 @@ pub async fn init_db() -> Result<DbPool, sqlx::Error> {
         .execute(&pool)
         .await;
 
+    let _ = sqlx::query("ALTER TABLE repositories ADD COLUMN default_server_id INTEGER")
+        .execute(&pool)
+        .await;
+
+    let _ = sqlx::query("ALTER TABLE repositories ADD COLUMN default_compose_path TEXT")
+        .execute(&pool)
+        .await;
+
     Ok(pool)
 }

@@ -98,6 +98,8 @@
     // Docker State
     let hasDockerfile = $state(false);
     let dockerImageName = $state("");
+    let defaultServerId = $state<number | undefined>(undefined);
+    let defaultComposePath = $state<string | undefined>(undefined);
     let configOpen = $state(false);
     let buildOpen = $state(false);
     let images = $state<DockerImage[]>([]);
@@ -121,7 +123,7 @@
         toast.promise(pushImage(serverId, imageToDeploy), {
             loading: `Pushing image ${imageToDeploy}...`,
             success: `Image ${imageToDeploy} pushed successfully!`,
-            error: (e) => `Failed to push image: ${e.message || e}`,
+            error: (e: any) => `Failed to push image: ${e.message || e}`,
         });
     }
 
@@ -153,8 +155,11 @@
             // Load Docker Config
             try {
                 const config = await getDockerConfig(path);
-                if (config.docker_image_name) {
-                    dockerImageName = config.docker_image_name;
+                dockerImageName = config.docker_image_name || "";
+                defaultServerId = config.default_server_id;
+                defaultComposePath = config.default_compose_path;
+
+                if (dockerImageName) {
                     loadImages();
                 }
             } catch (e) {
@@ -308,14 +313,24 @@
         return "/" + relative;
     }
 
-    // Save image name when it changes
-    $effect(() => {
-        if (path && dockerImageName) {
-            updateDockerConfig(path, dockerImageName).catch((e) =>
-                console.error("Failed to save config", e),
-            );
+    // Save image name when it changes - MOVED to handleSaveConfig to handle multiple fields
+    async function handleSaveConfig(
+        name: string,
+        sId?: number,
+        cPath?: string,
+    ) {
+        try {
+            await updateDockerConfig(path, name, sId, cPath);
+            dockerImageName = name;
+            defaultServerId = sId;
+            defaultComposePath = cPath;
+            toast.success("Configuration saved");
+            loadImages(); // scalar reload
+        } catch (e: any) {
+            console.error("Failed to save config", e);
+            toast.error("Failed to save config: " + e.message);
         }
-    });
+    }
 
     $effect(() => {
         // Reset currentPath when root path changes
@@ -762,6 +777,9 @@
     <DockerConfigDialog
         bind:open={configOpen}
         bind:imageName={dockerImageName}
+        bind:defaultServerId
+        bind:defaultComposePath
+        onSave={handleSaveConfig}
     />
     <DockerBuildDialog
         bind:open={buildOpen}
@@ -775,6 +793,8 @@
         existingImages={images.flatMap((i) => i.tags)}
         {path}
         repoImageName={dockerImageName}
+        {defaultServerId}
+        {defaultComposePath}
         onDeployStart={(tag) => {
             deployingImageTag = tag;
         }}

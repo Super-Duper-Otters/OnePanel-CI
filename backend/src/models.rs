@@ -44,6 +44,8 @@ pub struct Repository {
     pub path: String,
     pub name: Option<String>,
     pub docker_image_name: Option<String>,
+    pub default_server_id: Option<i64>,
+    pub default_compose_path: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, ToSchema)]
@@ -55,6 +57,8 @@ pub struct CreateDirectoryRequest {
 pub struct DirectoryResponse {
     pub path: String,
     pub docker_image_name: Option<String>,
+    pub default_server_id: Option<i64>,
+    pub default_compose_path: Option<String>,
     pub git_status: Option<crate::git::GitStatus>,
     pub error: Option<String>,
 }
@@ -110,6 +114,8 @@ pub struct PushImageReq {
 pub struct UpdateDockerConfigReq {
     pub path: String,
     pub docker_image_name: String,
+    pub default_server_id: Option<i64>,
+    pub default_compose_path: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, ToSchema)]

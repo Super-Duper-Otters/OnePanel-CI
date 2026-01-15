@@ -24,12 +24,16 @@ pub async fn list_repositories_inner(
             Ok(status) => responses.push(DirectoryResponse {
                 path: repo.path.clone(),
                 docker_image_name: repo.docker_image_name.clone(),
+                default_server_id: repo.default_server_id,
+                default_compose_path: repo.default_compose_path.clone(),
                 git_status: Some(status),
                 error: None,
             }),
             Err(e) => responses.push(DirectoryResponse {
                 path: repo.path.clone(),
                 docker_image_name: repo.docker_image_name.clone(),
+                default_server_id: repo.default_server_id,
+                default_compose_path: repo.default_compose_path.clone(),
                 git_status: None,
                 error: Some(e),
             }),
@@ -117,15 +121,18 @@ pub async fn update_docker_config(
     State(state): State<AppState>,
     Json(payload): Json<UpdateDockerConfigReq>,
 ) -> impl IntoResponse {
-    // Upsert logic: If path exists, update. If not, insert?
-    // Repositories are usually added explicitly. But if user browses a dynamic path, we might want to track it.
-    // For now, let's assume we insert-or-update based on path unique constraint.
+    // Upsert logic
     let res = sqlx::query(
-        "INSERT INTO repositories (path, docker_image_name) VALUES (?, ?) 
-         ON CONFLICT(path) DO UPDATE SET docker_image_name = excluded.docker_image_name",
+        "INSERT INTO repositories (path, docker_image_name, default_server_id, default_compose_path) VALUES (?, ?, ?, ?) 
+         ON CONFLICT(path) DO UPDATE SET 
+            docker_image_name = excluded.docker_image_name,
+            default_server_id = excluded.default_server_id,
+            default_compose_path = excluded.default_compose_path",
     )
     .bind(&payload.path)
     .bind(&payload.docker_image_name)
+    .bind(payload.default_server_id)
+    .bind(&payload.default_compose_path)
     .execute(&*state.db)
     .await;
 
@@ -157,6 +164,8 @@ pub async fn get_docker_config(
         Some(r) => Json(DirectoryResponse {
             path: r.path,
             docker_image_name: r.docker_image_name,
+            default_server_id: r.default_server_id,
+            default_compose_path: r.default_compose_path,
             git_status: None,
             error: None,
         })
@@ -164,6 +173,8 @@ pub async fn get_docker_config(
         None => Json(DirectoryResponse {
             path: payload.path,
             docker_image_name: None,
+            default_server_id: None,
+            default_compose_path: None,
             git_status: None,
             error: None,
         })

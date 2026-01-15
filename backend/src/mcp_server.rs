@@ -10,7 +10,7 @@ use rust_mcp_sdk::{
     },
     McpServer, ToMcpServerHandler,
 };
-use serde_json::Value;
+
 use std::sync::Arc;
 use tracing::info;
 

@@ -122,7 +122,12 @@
             "name_required": "请输入镜像名称",
             "saved": "镜像名称已保存",
             "image_name_label": "镜像名称",
-            "placeholder": "例如: my-app"
+            "placeholder": "例如: my-app",
+            "bind_target": "绑定部署目标",
+            "default_server": "默认服务器",
+            "default_compose": "默认编排文件",
+            "select_server": "选择服务器...",
+            "select_compose": "选择编排..."
         },
         "build": {
             "title": "构建 Docker 镜像",
@@ -179,7 +184,10 @@
         "version_required": "请输入版本号",
         "version_exists": "版本 {version} 已存在",
         "build_success": "成功构建 {tag}",
-        "build_failed": "构建失败"
+        "build_failed": "构建失败",
+        "deploying_toast": "正在部署服务...",
+        "failed": "部署失败: ",
+        "config_saved": "配置已保存为默认"
     },
     "servers": {
         "dashboard_title": "服务器面板",

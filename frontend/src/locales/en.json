@@ -122,7 +122,12 @@
             "name_required": "Image name is required",
             "saved": "Image name saved",
             "image_name_label": "Image Name",
-            "placeholder": "e.g. my-app"
+            "placeholder": "e.g. my-app",
+            "bind_target": "Bind Deployment Target",
+            "default_server": "Default Server",
+            "default_compose": "Default Compose File",
+            "select_server": "Select Server...",
+            "select_compose": "Select Compose..."
         },
         "build": {
             "title": "Build Docker Image",
@@ -179,7 +184,10 @@
         "version_required": "Version required",
         "version_exists": "Version {version} already exists",
         "build_success": "Built {tag} successfully",
-        "build_failed": "Build failed"
+        "build_failed": "Build failed",
+        "deploying_toast": "Deploying service...",
+        "failed": "Deployment failed: ",
+        "config_saved": "Configuration saved as default"
     },
     "servers": {
         "dashboard_title": "Server Dashboard",

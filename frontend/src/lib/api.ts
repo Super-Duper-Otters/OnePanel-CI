@@ -143,11 +143,21 @@ export async function getDockerConfig(path: string) {
     return res.json();
 }
 
-export async function updateDockerConfig(path: string, docker_image_name: string) {
+export async function updateDockerConfig(
+    path: string,
+    docker_image_name: string,
+    defaultServerId?: number,
+    defaultComposePath?: string
+) {
     const res = await fetch(`${API_BASE}/directories/config/update`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ path, docker_image_name }),
+        body: JSON.stringify({
+            path,
+            docker_image_name,
+            default_server_id: defaultServerId,
+            default_compose_path: defaultComposePath
+        }),
     });
     if (!res.ok) throw new Error(await res.text());
 }

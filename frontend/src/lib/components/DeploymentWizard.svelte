@@ -16,6 +16,7 @@
         getComposeContent,
         updateComposeContent,
         operateCompose,
+        updateDockerConfig,
     } from "$lib/api";
     import {
         Loader2,
@@ -48,6 +49,8 @@
         existingImages = [], // List of strings (tags)
         path,
         repoImageName = "",
+        defaultServerId,
+        defaultComposePath,
     }: {
         open: boolean;
         imageTag?: string; // If provided, pre-selects "Existing Image" with this tag
@@ -56,6 +59,8 @@
         existingImages?: string[];
         path?: string;
         repoImageName?: string;
+        defaultServerId?: number;
+        defaultComposePath?: string;
     } = $props();
 
     // Steps: 1=Source, 2=Target, 3=Deploying, 4=Done
@@ -153,7 +158,8 @@
         }
 
         building = true;
-        try {
+
+        const buildTask = async () => {
             const res = await fetch("http://localhost:3000/api/docker/build", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -168,24 +174,42 @@
                 const err = await res.text();
                 throw new Error(err);
             }
+            return res;
+        };
 
+        const promise = buildTask();
+
+        toast.promise(promise, {
+            loading: i18n(
+                "deploy.building",
+                `Building ${repoImageName}:${buildVersion}...`,
+                { image: repoImageName, version: buildVersion },
+            ),
+            success: () => {
+                const newTag = `${repoImageName}:${buildVersion}`;
+                return i18n(
+                    "deploy.build_success",
+                    `Built ${newTag} successfully`,
+                    {
+                        tag: newTag,
+                    },
+                );
+            },
+            error: (e: any) =>
+                i18n("deploy.build_failed", "Build failed") +
+                ": " +
+                (e.message || e),
+        });
+
+        try {
+            await promise;
             // Success
             const newTag = `${repoImageName}:${buildVersion}`;
-            toast.success(
-                i18n("deploy.build_success", `Built ${newTag} successfully`, {
-                    tag: newTag,
-                }),
-            );
             buildSuccessTag = newTag;
             selectedImageTag = newTag;
             return true;
         } catch (e: any) {
             console.error(e);
-            toast.error(
-                i18n("deploy.build_failed", "Build failed") +
-                    ": " +
-                    (e.message || e),
-            );
             return false;
         } finally {
             building = false;
@@ -193,6 +217,9 @@
     }
 
     async function handleNextStep() {
+        // Check for defaults
+        const hasDefaults = defaultServerId && defaultComposePath;
+
         if (sourceType === "build") {
             // Validate version first
             if (!buildVersion) {
@@ -211,11 +238,41 @@
                 );
                 return;
             }
-            // Build the image first
+
+            // Optimization: If defaults exist, run BUILD + DEPLOY in background
+            if (hasDefaults) {
+                open = false; // Close immediately
+
+                // Run chain in background
+                (async () => {
+                    // 1. Build
+                    const success = await handleInlineBuild();
+                    if (!success) return; // Toast already handled in inlineBuild
+
+                    // 2. Deploy
+                    selectedServerId = defaultServerId!.toString();
+                    selectedComposePath = defaultComposePath!;
+                    startDeploy();
+                })();
+                return;
+            }
+
+            // No defaults: Must wait for build, then show Step 2
             const success = await handleInlineBuild();
             if (!success) return;
         }
-        // Proceed to next step
+
+        // Proceed to next step (Existing Image or After Build)
+
+        // Optimization: If defaults exist, skip step 2 and deploy immediately
+        if (hasDefaults) {
+            selectedServerId = defaultServerId!.toString();
+            selectedComposePath = defaultComposePath!;
+            open = false; // Close dialog specifically requested
+            startDeploy();
+            return;
+        }
+
         loadServers();
         step = 2;
     }
@@ -274,11 +331,29 @@
     $effect(() => {
         if (open) {
             reset();
+            // Apply defaults if available
+            if (defaultServerId) {
+                selectedServerId = defaultServerId.toString();
+            }
+            if (defaultComposePath) {
+                selectedComposePath = defaultComposePath;
+            }
+
             if (imageTag) {
                 selectedImageTag = imageTag;
                 sourceType = "existing";
-                step = 2; // Auto skip to target if tag provided
-                loadServers();
+
+                // Optimization: If defaults exist, straight to deploy
+                if (defaultServerId && defaultComposePath) {
+                    selectedServerId = defaultServerId.toString();
+                    selectedComposePath = defaultComposePath;
+                    // Need to wait for mount/render? startDeploy is async.
+                    // But we need to ensure local state is set.
+                    startDeploy();
+                } else {
+                    step = 2; // Auto skip to target if tag provided
+                    loadServers();
+                }
             } else {
                 step = 1;
             }
@@ -336,29 +411,62 @@
         if (!selectedImageTag || !selectedServerId || !selectedComposePath)
             return;
 
-        step = 3;
-        deployError = "";
+        // User requested to close dialog and use toast for deployment
+        open = false;
+
+        // If dialog is open, show step 3 UI (No longer reachable if we close it above, but keeping for safety/ref logic)
+        // Since we closed it, open is false.
+
         const serverId = parseInt(selectedServerId);
+
+        // Auto-save config if not set
+        if (
+            (!defaultServerId || !defaultComposePath) &&
+            path &&
+            repoImageName
+        ) {
+            try {
+                updateDockerConfig(
+                    path,
+                    repoImageName,
+                    serverId,
+                    selectedComposePath,
+                )
+                    .then(() => {
+                        toast.success(
+                            i18n(
+                                "deploy.config_saved",
+                                "Configuration saved as default",
+                            ),
+                        );
+                    })
+                    .catch((e) =>
+                        console.error("Failed to auto-save config", e),
+                    );
+            } catch (e) {
+                console.error(e);
+            }
+        }
 
         // Notify parent that deployment is starting
         if (onDeployStart) onDeployStart(selectedImageTag);
 
-        try {
+        const deployTask = async () => {
             // 1. Push Image
-            updateStatus(1, "running");
+            if (open) updateStatus(1, "running");
             await pushImage(serverId, selectedImageTag);
-            updateStatus(1, "success");
+            if (open) updateStatus(1, "success");
 
             // 2. Read Compose
-            updateStatus(2, "running");
+            if (open) updateStatus(2, "running");
             const content = await getComposeContent(
                 serverId,
                 selectedComposePath,
             );
-            updateStatus(2, "success");
+            if (open) updateStatus(2, "success");
 
             // 3. Update Version
-            updateStatus(3, "running");
+            if (open) updateStatus(3, "running");
 
             const [repo, tag] = splitImageTag(selectedImageTag);
             const imageBase = repo;
@@ -383,43 +491,87 @@
                 regex,
                 `image: ${selectedImageTag}`,
             );
-            updateStatus(3, "success");
+            if (open) updateStatus(3, "success");
 
             // 4. Save Compose
-            updateStatus(4, "running");
+            if (open) updateStatus(4, "running");
             // Check compose name from list
-            const composeName =
-                composes.find((c) => c.value === selectedComposePath)?.label ||
-                "";
+            // If composes isn't loaded (e.g. fast skip), we might need to fetch it or rely on ID?
+            // Actually `operateCompose` needs composeName.
+            // If we skipped loadServers/loadComposes, `composes` is empty!
+            // We must ensure composes are loaded or we fetch the name differently.
+            // For now, assume loaded or fetch on fly?
+            // Better: fetch single compose helper? Or listComposes again?
+            let composeName = composes.find(
+                (c) => c.value === selectedComposePath,
+            )?.label;
+
+            if (!composeName) {
+                // Try to fetch specific if possible, or list all
+                const all = await listComposes(serverId);
+                composeName = all.find(
+                    (c: any) => c.path === selectedComposePath,
+                )?.name;
+            }
+
+            if (!composeName)
+                throw new Error("Could not determine compose name");
+
             await updateComposeContent(
                 serverId,
                 composeName,
                 selectedComposePath,
                 newContent,
             );
-            updateStatus(4, "success");
+            if (open) updateStatus(4, "success");
 
             // 5. Restart Service
-            updateStatus(5, "running");
+            if (open) updateStatus(5, "running");
             await operateCompose(
                 serverId,
                 composeName,
                 selectedComposePath,
                 "up",
             );
-            updateStatus(5, "success");
+            if (open) updateStatus(5, "success");
 
+            return `Deployed ${selectedImageTag} to ${composeName}`;
+        };
+
+        const promise = deployTask();
+
+        // If dialog is closed (or we want to show toast anyway), use toast
+        // User requested toast usage.
+        toast.promise(promise, {
+            loading: i18n("deploy.deploying_toast", "Deploying service..."),
+            success: (msg) => msg,
+            error: (e: any) => {
+                deployError = e.message || "Unknown error";
+                if (open) {
+                    const currentStep = deployStatus.find(
+                        (s) => s.state === "running",
+                    );
+                    if (currentStep) currentStep.state = "error";
+                }
+                return i18n("deploy.failed", "Deployment failed: ") + e.message;
+            },
+        });
+
+        try {
+            await promise;
             // Done
-            toast.success(i18n("deploy.success", "Deployment successful!"));
-            setTimeout(() => {
-                step = 4;
+            if (open) {
+                // toast.success handled by promise above
+                setTimeout(() => {
+                    step = 4;
+                    if (onDeploySuccess) onDeploySuccess();
+                }, 1000);
+            } else {
                 if (onDeploySuccess) onDeploySuccess();
-            }, 1000);
+            }
         } catch (e: any) {
             console.error(e);
-            deployError = e.message || "Unknown error";
-            const currentStep = deployStatus.find((s) => s.state === "running");
-            if (currentStep) currentStep.state = "error";
+            // Error handling in toast promise
         }
     }
 
@@ -443,6 +595,8 @@
     function escapeRegExp(string: string) {
         return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     }
+
+    let hasDefaults = $derived(!!(defaultServerId && defaultComposePath));
 </script>
 
 <Dialog bind:open>
@@ -582,6 +736,8 @@
                         {#if building}
                             <Loader2 class="mr-2 h-4 w-4 animate-spin" />
                             {i18n("deploy.building", "Building...")}
+                        {:else if hasDefaults}
+                            {i18n("docker.action.deploy", "Deploy")}
                         {:else}
                             {i18n("deploy.next_target", "Next: Select Target")}
                         {/if}
