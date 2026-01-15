@@ -20,7 +20,8 @@ use uuid::Uuid;
 // Custom JSON-RPC Request to avoid SDK dependency
 #[derive(serde::Deserialize)]
 pub struct JsonRpcRequest {
-    pub jsonrpc: String,
+    #[serde(rename = "jsonrpc")]
+    pub _jsonrpc: String,
     pub method: String,
     pub params: Option<Value>,
     pub id: Option<Value>,
@@ -70,14 +71,19 @@ pub async fn sse_handler(State(state): State<AppState>) -> impl IntoResponse {
 #[derive(serde::Deserialize)]
 pub struct McpQueryParams {
     #[serde(default, rename = "sessionId")]
-    session_id: Option<String>,
+    pub session_id: Option<String>,
 }
 
 pub async fn post_handler(
     State(state): State<AppState>,
-    Query(_params): Query<McpQueryParams>,
+    Query(params): Query<McpQueryParams>,
     Json(request): Json<JsonRpcRequest>,
 ) -> impl IntoResponse {
+    // Log session_id if provided for debugging
+    if let Some(ref sid) = params.session_id {
+        tracing::debug!("MCP request with session_id: {}", sid);
+    }
+
     let handler = AppHandler {
         state: state.clone(),
     };

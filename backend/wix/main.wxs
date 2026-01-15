@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version='1.0' encoding='windows-1252'?>
 <!--
   Copyright (C) 2017 Christopher R. Field.
 
@@ -15,41 +15,6 @@
   limitations under the License.
 -->
 
-<!--
-  The "cargo wix" subcommand provides a variety of predefined variables available
-  for customization of this template. The values for each variable are set at
-  installer creation time. The following variables are available:
-
-  TargetTriple      = The rustc target triple name.
-  TargetEnv         = The rustc target environment. This is typically either
-                      "msvc" or "gnu" depending on the toolchain downloaded and
-                      installed.
-  TargetVendor      = The rustc target vendor. This is typically "pc", but Rust
-                      does support other vendors, like "uwp".
-  CargoTargetBinDir = The complete path to the directory containing the
-                      binaries (exes) to include. The default would be
-                      "target\release\". If an explicit rustc target triple is
-                      used, i.e. cross-compiling, then the default path would
-                      be "target\<CARGO_TARGET>\<CARGO_PROFILE>",
-                      where "<CARGO_TARGET>" is replaced with the "CargoTarget"
-                      variable value and "<CARGO_PROFILE>" is replaced with the
-                      value from the "CargoProfile" variable. This can also
-                      be overridden manually with the "target-bin-dir" flag.
-  CargoTargetDir    = The path to the directory for the build artifacts, i.e.
-                      "target".
-  CargoProfile      = The cargo profile used to build the binaries
-                      (usually "debug" or "release").
-  Version           = The version for the installer. The default is the
-                      "Major.Minor.Fix" semantic versioning number of the Rust
-                      package.
--->
-
-<!--
-  Please do not remove these pre-processor If-Else blocks. These are used with
-  the `cargo wix` subcommand to automatically determine the installation
-  destination for 32-bit versus 64-bit installers. Removal of these lines will
-  cause installation errors.
--->
 <?if $(sys.BUILDARCH) = x64 or $(sys.BUILDARCH) = arm64 ?>
     <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
 <?else ?>
@@ -63,31 +28,27 @@
         Name='OnePanel'
         UpgradeCode='3D442FFD-D2DD-460C-A0AD-3ACDE871DE2C'
         Manufacturer='Super-Duper-Otters'
-        Language='2052'
-        Codepage='936'
+        Language='1033'
+        Codepage='1252'
         Version='$(var.Version)'>
 
         <Package Id='*'
-            Keywords='安装程序'
-            Description='OnePanel CI 应用程序'
+            Keywords='Installer'
+            Description='OnePanel CI Application'
             Manufacturer='Super-Duper-Otters'
             InstallerVersion='450'
-            Languages='2052'
+            Languages='1033'
             Compressed='yes'
             InstallScope='perMachine'
-            SummaryCodepage='936'
+            SummaryCodepage='1252'
             />
 
         <MajorUpgrade
             Schedule='afterInstallInitialize'
-            DowngradeErrorMessage='已安装更新版本的 [ProductName]。安装程序将退出。'/>
+            DowngradeErrorMessage='A newer version of [ProductName] is already installed. Setup will now exit.'/>
 
         <Media Id='1' Cabinet='media1.cab' EmbedCab='yes' DiskPrompt='CD-ROM #1'/>
-        <Property Id='DiskPrompt' Value='OnePanel 安装程序'/>
-
-        <!-- 图标定义 -->
-        <Icon Id='ProductICO' SourceFile='assets\icon.ico'/>
-        <Property Id='ARPPRODUCTICON' Value='ProductICO' />
+        <Property Id='DiskPrompt' Value='OnePanel Installation'/>
 
         <Directory Id='TARGETDIR' Name='SourceDir'>
             <Directory Id='$(var.PlatformProgramFilesFolder)' Name='PFiles'>
@@ -114,31 +75,29 @@
                 </Directory>
             </Directory>
 
-            <!-- 开始菜单快捷方式 -->
+            <!-- Start Menu Shortcut -->
             <Directory Id='ProgramMenuFolder' Name='Programs'>
                 <Directory Id='ApplicationProgramsFolder' Name='OnePanel'>
                     <Component Id='StartMenuShortcut' Guid='B8F5E3A1-9C2D-4F6E-8A7B-1D3E5F9C2A4B'>
                         <Shortcut Id='ApplicationStartMenuShortcut'
                             Name='OnePanel'
-                            Description='OnePanel CI 应用程序'
+                            Description='OnePanel CI Application'
                             Target='[APPLICATIONFOLDER]OnePanel.exe'
-                            WorkingDirectory='APPLICATIONFOLDER'
-                            Icon='ProductICO'/>
+                            WorkingDirectory='APPLICATIONFOLDER'/>
                         <RemoveFolder Id='CleanUpStartMenuShortcut' Directory='ApplicationProgramsFolder' On='uninstall'/>
                         <RegistryValue Root='HKCU' Key='Software\OnePanel' Name='StartMenuShortcut' Type='integer' Value='1' KeyPath='yes'/>
                     </Component>
                 </Directory>
             </Directory>
 
-            <!-- 桌面快捷方式 -->
+            <!-- Desktop Shortcut -->
             <Directory Id='DesktopFolder' Name='Desktop'>
-                <Component Id='DesktopShortcut' Guid='C9F6E4B2-AD3E-5G7F-9B8C-2E4F6G0D3B5C'>
+                <Component Id='DesktopShortcut' Guid='C9F6E4B2-AD3E-5A7F-9B8C-2E4F6A0D3B5C'>
                     <Shortcut Id='ApplicationDesktopShortcut'
                         Name='OnePanel'
-                        Description='OnePanel CI 应用程序'
+                        Description='OnePanel CI Application'
                         Target='[APPLICATIONFOLDER]OnePanel.exe'
-                        WorkingDirectory='APPLICATIONFOLDER'
-                        Icon='ProductICO'/>
+                        WorkingDirectory='APPLICATIONFOLDER'/>
                     <RegistryValue Root='HKCU' Key='Software\OnePanel' Name='DesktopShortcut' Type='integer' Value='1' KeyPath='yes'/>
                 </Component>
             </Directory>
@@ -146,8 +105,8 @@
 
         <Feature
             Id='Binaries'
-            Title='应用程序'
-            Description='安装 OnePanel 主程序。'
+            Title='Application'
+            Description='Installs the OnePanel application.'
             Level='1'
             ConfigurableDirectory='APPLICATIONFOLDER'
             AllowAdvertise='no'
@@ -158,8 +117,8 @@
 
             <Feature
                 Id='Environment'
-                Title='PATH 环境变量'
-                Description='将 [ProductName] 的安装位置添加到系统 PATH 环境变量中。这允许从任何位置调用 [ProductName]。'
+                Title='PATH Environment Variable'
+                Description='Add the install location of [ProductName] to the PATH system environment variable.'
                 Level='1'
                 Absent='allow'>
                 <ComponentRef Id='Path'/>
@@ -167,8 +126,8 @@
 
             <Feature
                 Id='StartMenu'
-                Title='开始菜单快捷方式'
-                Description='在开始菜单中创建 [ProductName] 的快捷方式。'
+                Title='Start Menu Shortcut'
+                Description='Create a shortcut in the Start Menu for [ProductName].'
                 Level='1'
                 Absent='allow'>
                 <ComponentRef Id='StartMenuShortcut'/>
@@ -176,8 +135,8 @@
 
             <Feature
                 Id='Desktop'
-                Title='桌面快捷方式'
-                Description='在桌面上创建 [ProductName] 的快捷方式。'
+                Title='Desktop Shortcut'
+                Description='Create a shortcut on the Desktop for [ProductName].'
                 Level='1'
                 Absent='allow'>
                 <ComponentRef Id='DesktopShortcut'/>
@@ -191,7 +150,7 @@
         <UI>
             <UIRef Id='WixUI_FeatureTree'/>
             
-            <!-- 跳过许可协议页面 -->
+            <!-- Skip license agreement page -->
             <Publish Dialog='WelcomeDlg' Control='Next' Event='NewDialog' Value='CustomizeDlg' Order='99'>1</Publish>
             <Publish Dialog='CustomizeDlg' Control='Back' Event='NewDialog' Value='WelcomeDlg' Order='99'>1</Publish>
 

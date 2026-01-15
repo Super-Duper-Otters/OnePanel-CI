@@ -1,14 +1,12 @@
 use async_trait::async_trait;
 use rust_mcp_sdk::{
-    error::SdkResult,
     macros,
-    mcp_server::{hyper_server, HyperServerOptions, ServerHandler},
+    mcp_server::ServerHandler,
     schema::{
-        CallToolError, CallToolRequestParams, CallToolResult, Implementation, InitializeResult,
-        ListToolsResult, PaginatedRequestParams, ProtocolVersion, ServerCapabilities,
-        ServerCapabilitiesTools,
+        CallToolError, CallToolRequestParams, CallToolResult, ListToolsResult,
+        PaginatedRequestParams,
     },
-    McpServer, ToMcpServerHandler,
+    McpServer,
 };
 
 use std::sync::Arc;
@@ -595,45 +593,4 @@ impl ServerHandler for AppHandler {
     ) -> std::result::Result<CallToolResult, CallToolError> {
         self.call_tool(params.name, params.arguments).await
     }
-}
-
-pub async fn start_mcp_server(state: AppState) -> SdkResult<()> {
-    let server_info = InitializeResult {
-        server_info: Implementation {
-            name: "OnePanel-CI-MCP".into(),
-            version: env!("APP_VERSION").into(),
-            title: Some("OnePanel CI MCP Server".into()),
-            description: Some("Control OnePanel CI via MCP".into()),
-            icons: vec![], // Add icon if needed
-            website_url: None,
-        },
-        capabilities: ServerCapabilities {
-            tools: Some(ServerCapabilitiesTools {
-                list_changed: Some(false),
-            }),
-            ..Default::default()
-        },
-        protocol_version: ProtocolVersion::V2025_11_25.into(),
-        instructions: None,
-        meta: None,
-    };
-
-    // Explicitly import the trait and use it
-    let handler = AppHandler { state }.to_mcp_server_handler();
-
-    let server = hyper_server::create_server(
-        server_info,
-        handler,
-        HyperServerOptions {
-            host: "127.0.0.1".to_string(), // Listen on all interfaces if needed, or localhost
-            port: 3001,
-            sse_support: true,
-            ..Default::default()
-        },
-    );
-
-    println!("Starting MCP Server on http://127.0.0.1:3001/sse");
-    server.start().await?;
-
-    Ok(())
 }
