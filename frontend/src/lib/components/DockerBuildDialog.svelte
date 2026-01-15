@@ -11,6 +11,7 @@
     import { t } from "svelte-i18n";
     import { toast } from "svelte-sonner";
     import { Loader2 } from "lucide-svelte";
+    import { notificationStore } from "$lib/stores/notifications.svelte";
 
     let {
         open = $bindable(false),
@@ -115,25 +116,53 @@
 
         open = false; // Close immediately
 
-        const buildPromise = async () => {
-            const res = await fetch("http://localhost:3000/api/docker/build", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    path,
-                    image_name: imageName,
-                    version,
-                }),
-            });
+        const startTime = Date.now();
+        const promise = async () => {
+            try {
+                const res = await fetch(
+                    "http://localhost:3000/api/docker/build",
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            path,
+                            image_name: imageName,
+                            version,
+                        }),
+                    },
+                );
 
-            if (!res.ok) {
-                const err = await res.text();
-                throw new Error(err);
+                if (!res.ok) {
+                    const err = await res.text();
+                    throw new Error(err);
+                }
+                const duration = Date.now() - startTime;
+                notificationStore.add({
+                    type: "build",
+                    title: $t("docker.build.success_title", {
+                        default: "Build Success",
+                    }),
+                    detail: `${imageName}:${version}`,
+                    status: "success",
+                    duration,
+                });
+                return res.text();
+            } catch (e: any) {
+                const duration = Date.now() - startTime;
+                notificationStore.add({
+                    type: "build",
+                    title: $t("docker.build.failed_title", {
+                        default: "Build Failed",
+                    }),
+                    detail: `${imageName}:${version} - ${e.message || e}`,
+                    status: "error",
+                    duration,
+                });
+                throw e;
             }
-            return res.text();
         };
 
-        toast.promise(buildPromise(), {
+        toast.promise(promise(), {
             loading: $t("docker.build.building"),
             success: () => {
                 onSuccess?.();

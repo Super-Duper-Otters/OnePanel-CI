@@ -18,6 +18,7 @@
   import SettingsDialog from "$lib/components/SettingsDialog.svelte";
   import AddDirectoryDialog from "$lib/components/AddDirectoryDialog.svelte";
   import AddServerDialog from "$lib/components/AddServerDialog.svelte";
+  import NotificationCenter from "$lib/components/NotificationCenter.svelte";
   import { getVersion } from "$lib/api";
 
   let settingsOpen = $state(false);
@@ -124,9 +125,16 @@
           </div>
         {/if}
       </div>
-      <Button variant="ghost" size="icon" onclick={() => (settingsOpen = true)}>
-        <Settings class="h-5 w-5" />
-      </Button>
+      <div class="flex items-center gap-1">
+        <NotificationCenter />
+        <Button
+          variant="ghost"
+          size="icon"
+          onclick={() => (settingsOpen = true)}
+        >
+          <Settings class="h-5 w-5" />
+        </Button>
+      </div>
     </div>
 
     <!-- @ts-ignore -->

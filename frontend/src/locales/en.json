@@ -142,7 +142,9 @@
             "checking_tags": "Checking existing tags...",
             "existing_versions": "Existing versions",
             "building": "Building...",
-            "action": "Build & Tag"
+            "action": "Build & Tag",
+            "success_title": "Build Success",
+            "failed_title": "Build Failed"
         }
     },
     "deploy": {
@@ -187,7 +189,15 @@
         "build_failed": "Build failed",
         "deploying_toast": "Deploying service...",
         "failed": "Deployment failed: ",
-        "config_saved": "Configuration saved as default"
+        "config_saved": "Configuration saved as default",
+        "upload_success": "Upload Success",
+        "success_title": "Deploy Success",
+        "failed_title": "Deploy Failed"
+    },
+    "notifications": {
+        "title": "Notifications",
+        "clear": "Clear all",
+        "empty": "No notifications"
     },
     "servers": {
         "dashboard_title": "Server Dashboard",

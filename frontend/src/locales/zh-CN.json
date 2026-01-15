@@ -142,7 +142,9 @@
             "checking_tags": "正在检查现有标签...",
             "existing_versions": "现有版本",
             "building": "构建中...",
-            "action": "构建并打标签"
+            "action": "构建并打标签",
+            "success_title": "构建成功",
+            "failed_title": "构建失败"
         }
     },
     "deploy": {
@@ -187,7 +189,15 @@
         "build_failed": "构建失败",
         "deploying_toast": "正在部署服务...",
         "failed": "部署失败: ",
-        "config_saved": "配置已保存为默认"
+        "config_saved": "配置已保存为默认",
+        "upload_success": "上传成功",
+        "success_title": "部署成功",
+        "failed_title": "部署失败"
+    },
+    "notifications": {
+        "title": "通知",
+        "clear": "清除全部",
+        "empty": "暂无通知"
     },
     "servers": {
         "dashboard_title": "服务器面板",

@@ -30,6 +30,7 @@
     import clsx from "clsx";
     import { t } from "svelte-i18n";
     import { RadioGroup, RadioGroupItem } from "$lib/components/ui/radio-group";
+    import { notificationStore } from "$lib/stores/notifications.svelte";
 
     // Helper to get i18n value or fallback
     const i18n = (
@@ -454,7 +455,18 @@
         const deployTask = async () => {
             // 1. Push Image
             if (open) updateStatus(1, "running");
+            const pushStart = Date.now();
             await pushImage(serverId, selectedImageTag);
+            const pushDuration = Date.now() - pushStart;
+            notificationStore.add({
+                type: "upload",
+                title: $t("deploy.upload_success", {
+                    default: "Upload Success",
+                }),
+                detail: selectedImageTag,
+                status: "success",
+                duration: pushDuration,
+            });
             if (open) updateStatus(1, "success");
 
             // 2. Read Compose
@@ -538,6 +550,7 @@
             return `Deployed ${selectedImageTag} to ${composeName}`;
         };
 
+        const deployStart = Date.now();
         const promise = deployTask();
 
         // If dialog is closed (or we want to show toast anyway), use toast
@@ -560,6 +573,22 @@
         try {
             await promise;
             // Done
+            const deployDuration = Date.now() - deployStart;
+            // Get compose name if available from composes list or try to guess
+            const composeName =
+                composes.find((c) => c.value === selectedComposePath)?.label ||
+                selectedComposePath;
+
+            notificationStore.add({
+                type: "deploy",
+                title: $t("deploy.success_title", {
+                    default: "Deploy Success",
+                }),
+                detail: `${selectedImageTag} -> ${composeName}`,
+                status: "success",
+                duration: deployDuration,
+            });
+
             if (open) {
                 // toast.success handled by promise above
                 setTimeout(() => {
@@ -571,6 +600,15 @@
             }
         } catch (e: any) {
             console.error(e);
+
+            const deployDuration = Date.now() - deployStart;
+            notificationStore.add({
+                type: "deploy",
+                title: $t("deploy.failed_title", { default: "Deploy Failed" }),
+                detail: `${selectedImageTag} - ${e.message || e}`,
+                status: "error",
+                duration: deployDuration,
+            });
             // Error handling in toast promise
         }
     }
