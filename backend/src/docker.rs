@@ -47,6 +47,7 @@ pub struct DockerImage {
     pub tags: Vec<String>,
     pub created: i64,
     pub size: i64,
+    pub is_used: bool,
 }
 
 pub async fn list_tags(image_name: &str) -> Result<Vec<DockerImage>, String> {
@@ -76,6 +77,7 @@ pub async fn list_tags(image_name: &str) -> Result<Vec<DockerImage>, String> {
             tags: image.repo_tags,
             created: image.created,
             size: image.size,
+            is_used: false, // Default to false for tags list, or we could check usage here too but less critical
         });
     }
 
@@ -238,8 +240,15 @@ pub async fn pull_image(image_name: &str) -> Result<(), String> {
 
 pub async fn remove_image(id: &str) -> Result<(), String> {
     let docker = Docker::connect_with_local_defaults().map_err(|e| e.to_string())?;
+    use bollard::image::RemoveImageOptions;
+
+    let options = Some(RemoveImageOptions {
+        force: true,
+        ..Default::default()
+    });
+
     docker
-        .remove_image(id, None, None)
+        .remove_image(id, options, None)
         .await
         .map_err(|e| e.to_string())?;
 
@@ -248,7 +257,9 @@ pub async fn remove_image(id: &str) -> Result<(), String> {
 
 pub async fn list_images() -> Result<Vec<DockerImage>, String> {
     let docker = Docker::connect_with_local_defaults().map_err(|e| e.to_string())?;
+    use bollard::container::ListContainersOptions;
     use bollard::image::ListImagesOptions;
+    use std::collections::HashSet;
 
     let options = ListImagesOptions::<String> {
         ..Default::default()
@@ -259,15 +270,63 @@ pub async fn list_images() -> Result<Vec<DockerImage>, String> {
         .await
         .map_err(|e| e.to_string())?;
 
+    // Get all containers to check usage
+    let container_options = ListContainersOptions::<String> {
+        all: true,
+        ..Default::default()
+    };
+    let containers = docker
+        .list_containers(Some(container_options))
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let mut used_images = HashSet::new();
+    for container in containers {
+        if let Some(image_id) = container.image_id {
+            used_images.insert(
+                image_id
+                    .replace("sha256:", "")
+                    .chars()
+                    .take(12)
+                    .collect::<String>(),
+            );
+            // Also add full id without prefix
+            used_images.insert(container.image.unwrap_or_default());
+        }
+    }
+
     let mut result = Vec::new();
     for image in images {
+        let id_short: String = image.id.replace("sha256:", "").chars().take(12).collect();
+        // Check if any tag matches used images or ID matches
+        let is_used = used_images.contains(&id_short)
+            || image.repo_tags.iter().any(|tag| used_images.contains(tag));
+
         result.push(DockerImage {
-            id: image.id.replace("sha256:", "").chars().take(12).collect(),
+            id: id_short,
             tags: image.repo_tags,
             created: image.created,
             size: image.size,
+            is_used,
         });
     }
 
     Ok(result)
+}
+
+pub async fn prune_images() -> Result<String, String> {
+    use std::process::Command;
+
+    let output = Command::new("docker")
+        .arg("image")
+        .arg("prune")
+        .arg("-f")
+        .output()
+        .map_err(|e| format!("Failed to execute docker prune: {}", e))?;
+
+    if output.status.success() {
+        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    } else {
+        Err(String::from_utf8_lossy(&output.stderr).to_string())
+    }
 }

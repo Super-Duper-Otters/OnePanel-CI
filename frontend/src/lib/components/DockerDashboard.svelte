@@ -14,7 +14,10 @@
         Box,
         ArrowLeft,
         Download,
+        Trash2,
     } from "lucide-svelte";
+    import { pruneImages } from "$lib/api";
+    import { toast } from "svelte-sonner";
     import { Tabs, TabsContent } from "$lib/components/ui/tabs";
     import DockerContainers from "./DockerContainers.svelte";
     import DockerImages from "./DockerImages.svelte";
@@ -47,6 +50,31 @@
             error = "Error connecting to backend";
         } finally {
             loading = false;
+        }
+    }
+
+    let pruneLoading = $state(false);
+
+    async function handlePrune() {
+        if (pruneLoading) return;
+        pruneLoading = true;
+        try {
+            const output = await pruneImages();
+            toast.success(
+                $t("docker.images_panel.prune_success", {
+                    values: { output: output || "Done" },
+                }),
+            );
+            // Refresh images if possible
+            if (dockerImagesComponent?.fetchImages) {
+                dockerImagesComponent.fetchImages();
+            }
+            fetchDockerInfo(); // Also refresh header counts
+        } catch (e) {
+            toast.error($t("docker.images_panel.prune_failed"));
+            console.error(e);
+        } finally {
+            pruneLoading = false;
         }
     }
 
@@ -183,14 +211,16 @@
                         {$t("docker.images_panel.title") || "Docker Images"}
                     </h3>
                 </div>
-                <Button
-                    variant="default"
-                    size="sm"
-                    onclick={() => dockerImagesComponent?.openPullDialog()}
-                >
-                    <Download class="mr-2" size={16} />
-                    {$t("docker.images_panel.pull_image") || "Pull Image"}
-                </Button>
+                <div class="flex items-center gap-2">
+                    <Button
+                        variant="default"
+                        size="sm"
+                        onclick={() => dockerImagesComponent?.openPullDialog()}
+                    >
+                        <Download class="mr-2" size={16} />
+                        {$t("docker.images_panel.pull_image") || "Pull Image"}
+                    </Button>
+                </div>
             </div>
             <DockerImages bind:this={dockerImagesComponent} />
         </TabsContent>

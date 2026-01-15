@@ -8,7 +8,12 @@
         "actions": "Actions",
         "close": "Close",
         "edit": "Edit",
-        "back": "Back"
+        "back": "Back",
+        "select_all": "Select All",
+        "select_none": "Select None",
+        "confirm_delete": "Are you sure?",
+        "cancel": "Cancel",
+        "delete": "Delete"
     },
     "directory": {
         "add_title": "Add Repository",
@@ -116,7 +121,13 @@
             "confirm_remove": "Are you sure you want to remove this image?",
             "remove_failed": "Failed to remove image",
             "pull_failed": "Failed to pull image",
-            "no_images_found_generic": "No images found"
+            "no_images_found_generic": "No images found",
+            "prune_images": "Clean Old Images",
+            "prune_success": "Cleaned up unused images: {output}",
+            "prune_failed": "Failed to clean images",
+            "confirm_batch_remove": "Delete {count} images?",
+            "select_unused": "Select Unused",
+            "select_old": "Select Old (<none>)"
         },
         "config": {
             "title": "Docker Configuration",

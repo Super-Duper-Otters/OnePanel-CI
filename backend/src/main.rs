@@ -229,6 +229,10 @@ async fn run_server() {
             axum::routing::post(handlers::docker::pull_image),
         )
         .route(
+            "/api/docker/prune",
+            axum::routing::post(handlers::docker::prune_images),
+        )
+        .route(
             "/api/docker/images/{id}",
             axum::routing::delete(handlers::docker::remove_image),
         )

@@ -143,6 +143,14 @@ export async function getDockerConfig(path: string) {
     return res.json();
 }
 
+export async function pruneImages() {
+    const res = await fetch(`${API_BASE}/docker/prune`, {
+        method: "POST",
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.text();
+}
+
 export async function updateDockerConfig(
     path: string,
     docker_image_name: string,

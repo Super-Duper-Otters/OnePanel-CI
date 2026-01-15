@@ -8,7 +8,12 @@
         "actions": "操作",
         "close": "关闭",
         "edit": "编辑",
-        "back": "返回"
+        "back": "返回",
+        "select_all": "全选",
+        "select_none": "取消全选",
+        "confirm_delete": "确定要删除吗？",
+        "cancel": "取消",
+        "delete": "删除"
     },
     "directory": {
         "add_title": "添加仓库",
@@ -116,7 +121,13 @@
             "confirm_remove": "确定要删除该镜像吗？",
             "remove_failed": "删除镜像失败",
             "pull_failed": "拉取镜像失败",
-            "no_images_found_generic": "暂无镜像"
+            "no_images_found_generic": "暂无镜像",
+            "prune_images": "清理旧镜像",
+            "prune_success": "清理结果: {output}",
+            "prune_failed": "清理失败",
+            "confirm_batch_remove": "确定要删除 {count} 个镜像吗？",
+            "select_unused": "选择未使用",
+            "select_old": "选择旧镜像 (<none>)"
         },
         "config": {
             "title": "Docker 配置",

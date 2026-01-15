@@ -203,3 +203,18 @@ pub async fn remove_image(
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
     }
 }
+
+#[utoipa::path(
+    post,
+    path = "/api/docker/prune",
+    responses(
+        (status = 200, description = "Images pruned", body = String),
+        (status = 500, description = "Error", body = String)
+    )
+)]
+pub async fn prune_images() -> impl IntoResponse {
+    match docker::prune_images().await {
+        Ok(output) => (StatusCode::OK, output).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e).into_response(),
+    }
+}
