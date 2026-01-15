@@ -8,6 +8,10 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -54,10 +58,38 @@ jobs:
         name: onepanel-ci-windows
         path: target/release/OnePanel.exe
 
+    - name: Generate Release Notes
+      if: startsWith(github.ref, 'refs/tags/')
+      shell: bash
+      run: |
+        CURRENT_TAG=${GITHUB_REF#refs/tags/}
+        echo "Current Tag: $CURRENT_TAG"
+        
+        # Try to find the previous tag
+        # We use HEAD^ to start looking from the parent of the current commit (which is the current tag)
+        if PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null); then
+          echo "Previous Tag: $PREV_TAG"
+          echo "Generating log from $PREV_TAG to HEAD"
+          echo "## Changes in $CURRENT_TAG" > RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          git log "$PREV_TAG..HEAD" --pretty=format:"- %s (%h)" >> RELEASE_NOTES.md
+        else
+          echo "No previous tag found. Generating log from start."
+          echo "## Changes in $CURRENT_TAG" > RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          git log --pretty=format:"- %s (%h)" >> RELEASE_NOTES.md
+        fi
+        
+        # Determine if there are logs (just in case)
+        if [ ! -s RELEASE_NOTES.md ]; then
+           echo "No changes found." > RELEASE_NOTES.md
+        fi
+
     - name: Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: target/release/OnePanel.exe
+        body_path: RELEASE_NOTES.md
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
