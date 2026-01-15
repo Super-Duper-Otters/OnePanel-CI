@@ -2,6 +2,16 @@
 name = "OnePanel"
 version = "0.1.0"
 edition = "2021"
+description = "OnePanel CI Application"
+repository = "https://github.com/Super-Duper-Otters/OnePanel-CI"
+license = "MIT"
+authors = ["Super-Duper-Otters"]
+
+[package.metadata.wix]
+upgrade-guid = "3D442FFD-D2DD-460C-A0AD-3ACDE871DE2C"
+path-guid = "60CDFAAD-6112-42F8-B4BE-270779E6C215"
+license = false
+eula = false
 
 [dependencies]
 axum = "0.8"

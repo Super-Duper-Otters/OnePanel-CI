@@ -2,3 +2,24 @@
 members = ["backend"]
 resolver = "2"
 default-members = ["backend"]
+
+# Config for 'dist'
+[workspace.metadata.dist]
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.30.3"
+# CI backends to support
+ci = "github"
+# The installers to generate for each app
+installers = ["shell", "powershell", "msi"]
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = ["x86_64-pc-windows-msvc"]
+# Extra static files to include in each App (path relative to this Cargo.toml's dir)
+include = []
+# Path that installers should place binaries in
+install-path = "CARGO_HOME"
+# Whether to install an updater program
+install-updater = false
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
