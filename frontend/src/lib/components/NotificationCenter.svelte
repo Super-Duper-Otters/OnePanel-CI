@@ -25,11 +25,6 @@
     <Popover.Trigger>
         <Button variant="ghost" size="icon" class="relative">
             <Bell class="h-5 w-5" />
-            {#if notificationStore.all.length > 0}
-                <span
-                    class="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500"
-                ></span>
-            {/if}
         </Button>
     </Popover.Trigger>
     <Popover.Content class="w-80 p-0" align="end">

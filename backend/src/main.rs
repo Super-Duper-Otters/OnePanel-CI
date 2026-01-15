@@ -281,6 +281,12 @@ async fn run_server() {
             get(handlers::image_deployments::get_image_deployments),
         )
         .route("/api/version", get(handlers::version::get_version))
+        .route(
+            "/api/notifications",
+            get(handlers::notifications::list_notifications)
+                .post(handlers::notifications::create_notification)
+                .delete(handlers::notifications::clear_notifications),
+        )
         .merge(Scalar::with_url("/scalar", ApiDoc::openapi()))
         .layer(
             CorsLayer::new()

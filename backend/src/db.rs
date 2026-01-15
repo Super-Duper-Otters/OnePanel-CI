@@ -34,6 +34,16 @@ pub async fn init_db() -> Result<DbPool, sqlx::Error> {
             docker_image_name TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
+        CREATE TABLE IF NOT EXISTS notifications (
+            id TEXT PRIMARY KEY,
+            type TEXT NOT NULL,
+            title TEXT NOT NULL,
+            detail TEXT NOT NULL,
+            status TEXT NOT NULL,
+            timestamp INTEGER NOT NULL,
+            duration INTEGER,
+            server_name TEXT
+        );
         "#,
     )
     .execute(&pool)

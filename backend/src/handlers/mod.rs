@@ -6,6 +6,7 @@ pub mod fs;
 pub mod git;
 pub mod image;
 pub mod image_deployments;
+pub mod notifications;
 pub mod repository;
 pub mod server;
 pub mod version;

@@ -122,3 +122,28 @@ pub struct UpdateDockerConfigReq {
 pub struct GetDockerConfigReq {
     pub path: String,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow, ToSchema)]
+pub struct Notification {
+    pub id: String,
+    #[serde(rename = "type")]
+    pub type_: String,
+    pub title: String,
+    pub detail: String,
+    pub status: String,
+    pub timestamp: i64,
+    pub duration: Option<i64>,
+    pub server_name: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, ToSchema)]
+pub struct CreateNotificationReq {
+    #[serde(rename = "type")]
+    pub type_: String,
+    pub title: String,
+    pub detail: String,
+    pub status: String,
+    pub timestamp: i64,
+    pub duration: Option<i64>,
+    pub server_name: Option<String>,
+}

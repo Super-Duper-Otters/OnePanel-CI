@@ -181,3 +181,36 @@ export async function getVersion() {
     return res.json();
 }
 
+
+export interface Notification {
+    id: string;
+    type: "build" | "upload" | "deploy";
+    title: string;
+    detail: string;
+    status: "success" | "error";
+    timestamp: number;
+    duration?: number;
+    server_name?: string;
+}
+
+export async function listNotifications(): Promise<Notification[]> {
+    const res = await fetch(`${API_BASE}/notifications`);
+    if (!res.ok) throw new Error("Failed to fetch notifications");
+    return res.json();
+}
+
+export async function createNotification(notification: Omit<Notification, "id">) {
+    const res = await fetch(`${API_BASE}/notifications`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(notification),
+    });
+    if (!res.ok) throw new Error(await res.text());
+}
+
+export async function clearNotifications() {
+    const res = await fetch(`${API_BASE}/notifications/clear`, {
+        method: "POST",
+    });
+    if (!res.ok) throw new Error(await res.text());
+}
