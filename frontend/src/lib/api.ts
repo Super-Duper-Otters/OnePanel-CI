@@ -175,7 +175,13 @@ export async function getImageDeployments(imageBase: string): Promise<ImageDeplo
     return res.json();
 }
 
-export async function getVersion() {
+export interface VersionResponse {
+    version: string;
+    latest_version?: string;
+    update_available: boolean;
+}
+
+export async function getVersion(): Promise<VersionResponse> {
     const res = await fetch(`${API_BASE}/version`);
     if (!res.ok) throw new Error("Failed to fetch version");
     return res.json();

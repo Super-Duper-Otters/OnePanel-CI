@@ -1,6 +1,7 @@
 {
     "app": {
-        "title": "OnePanel CI/CD Manager"
+        "title": "OnePanel CI/CD Manager",
+        "update_available": "Update Available"
     },
     "common": {
         "view": "View",

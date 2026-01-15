@@ -26,6 +26,7 @@
   let addServerOpen = $state(false);
   let currentTab = $state("repositories");
   let appVersion = $state("");
+  let updateAvailable = $state(false);
 
   onMount(async () => {
     const params = new URLSearchParams(window.location.search);
@@ -42,6 +43,7 @@
     try {
       const v = await getVersion();
       appVersion = v.version;
+      updateAvailable = v.update_available;
     } catch (e) {
       console.error("Failed to fetch version", e);
     }
@@ -118,10 +120,25 @@
       <div class="flex items-center gap-3">
         <h1 class="text-3xl font-bold">{$t("app.title")}</h1>
         {#if appVersion}
-          <div
-            class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold text-muted-foreground"
-          >
-            v{appVersion}
+          <div class="flex items-center gap-2">
+            <div
+              class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold text-muted-foreground"
+            >
+              v{appVersion}
+            </div>
+            {#if updateAvailable}
+              <button
+                class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-800 hover:bg-blue-200 cursor-pointer transition-colors"
+                onclick={() => {
+                  window.open(
+                    "https://github.com/Super-Duper-Otters/OnePanel-CI/releases",
+                    "_blank",
+                  );
+                }}
+              >
+                {$t("app.update_available")}
+              </button>
+            {/if}
           </div>
         {/if}
       </div>

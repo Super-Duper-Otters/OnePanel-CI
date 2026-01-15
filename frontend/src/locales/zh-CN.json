@@ -1,6 +1,7 @@
 {
     "app": {
-        "title": "OnePanel CI/CD 管理器"
+        "title": "OnePanel CI/CD 管理器",
+        "update_available": "有新版本"
     },
     "common": {
         "view": "查看",
