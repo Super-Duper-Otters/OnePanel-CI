@@ -25,6 +25,7 @@ mod fs;
 mod git;
 mod handlers;
 mod icon;
+mod mcp_server;
 mod models;
 mod onepanel;
 mod state;
@@ -137,6 +138,14 @@ async fn run_server() {
 
     let db = db::init_db().await.unwrap();
     let state = AppState::new(db);
+
+    // Spawn MCP Server
+    let mcp_state = state.clone();
+    tokio::spawn(async move {
+        if let Err(e) = crate::mcp_server::start_mcp_server(mcp_state).await {
+            eprintln!("MCP Server error: {}", e);
+        }
+    });
 
     let app = Router::new()
         .route(

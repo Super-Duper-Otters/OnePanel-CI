@@ -10,11 +10,12 @@ use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
         (status = 200, description = "List all repositories", body = Vec<DirectoryResponse>)
     )
 )]
-pub async fn list_repositories(State(state): State<AppState>) -> impl IntoResponse {
+pub async fn list_repositories_inner(
+    db: &crate::db::DbPool,
+) -> Result<Vec<DirectoryResponse>, anyhow::Error> {
     let repos = sqlx::query_as::<_, Repository>("SELECT * FROM repositories")
-        .fetch_all(&*state.db)
-        .await
-        .unwrap_or(vec![]);
+        .fetch_all(db)
+        .await?;
 
     let mut responses = Vec::new();
 
@@ -35,7 +36,21 @@ pub async fn list_repositories(State(state): State<AppState>) -> impl IntoRespon
         }
     }
 
-    Json(responses)
+    Ok(responses)
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/directories",
+    responses(
+        (status = 200, description = "List all repositories", body = Vec<DirectoryResponse>)
+    )
+)]
+pub async fn list_repositories(State(state): State<AppState>) -> impl IntoResponse {
+    match list_repositories_inner(&state.db).await {
+        Ok(data) => Json(data).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
 }
 
 #[utoipa::path(

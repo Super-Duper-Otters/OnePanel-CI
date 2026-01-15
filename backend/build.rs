@@ -58,6 +58,11 @@ fn main() {
     println!("cargo:rerun-if-changed=../frontend/vite.config.ts");
     println!("cargo:rerun-if-changed=../frontend/index.html");
 
+    if std::env::var("SKIP_FRONTEND_BUILD").is_ok() {
+        println!("cargo:warning=Skipping frontend build");
+        return;
+    }
+
     println!("cargo:warning=Building frontend...");
 
     let pnpm = if cfg!(windows) { "pnpm.cmd" } else { "pnpm" };
