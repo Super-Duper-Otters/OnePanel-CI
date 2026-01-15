@@ -19,8 +19,8 @@ include = []
 install-path = "CARGO_HOME"
 # Whether to install an updater program
 install-updater = false
-# Allow manual modifications to CI files
-allow-dirty = ["ci"]
+# Allow manual modifications to CI and MSI files
+allow-dirty = ["ci", "msi"]
 # The profile that 'dist' will build with
 [profile.dist]
 inherits = "release"
