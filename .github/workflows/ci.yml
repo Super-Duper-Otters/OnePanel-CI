@@ -21,11 +21,33 @@ jobs:
     runs-on: windows-latest
     permissions:
       contents: write
+      actions: write
 
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0 # Important for git describe
+
+    - name: Check for Duplicate Build
+      if: "!startsWith(github.ref, 'refs/tags/')"
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        # Check if the current commit is tagged
+        if git describe --tags --exact-match HEAD >/dev/null 2>&1; then
+          TAG_NAME=$(git describe --tags --exact-match HEAD)
+          echo "Current commit is tagged as $TAG_NAME."
+          # If it matches our release tag pattern
+          if [[ "$TAG_NAME" == v* ]]; then
+             echo "Tag '$TAG_NAME' detected on this commit."
+             echo "Since this is a branch/PR build (${{ github.ref }}), and a tag build is expected, cancelling this run to avoid duplication."
+             gh run cancel ${{ github.run_id }}
+             sleep 60 # Give it time to cancel
+          fi
+        else
+          echo "No tag found on current commit. Proceeding..."
+        fi
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
