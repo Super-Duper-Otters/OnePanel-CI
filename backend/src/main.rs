@@ -139,14 +139,6 @@ async fn run_server() {
     let db = db::init_db().await.unwrap();
     let state = AppState::new(db);
 
-    // Spawn MCP Server
-    let mcp_state = state.clone();
-    tokio::spawn(async move {
-        if let Err(e) = crate::mcp_server::start_mcp_server(mcp_state).await {
-            eprintln!("MCP Server error: {}", e);
-        }
-    });
-
     let app = Router::new()
         .route(
             "/api/directories",
@@ -291,6 +283,11 @@ async fn run_server() {
                 .post(handlers::notifications::create_notification)
                 .delete(handlers::notifications::clear_notifications),
         )
+        .route(
+            "/sse",
+            get(handlers::mcp::sse_handler).post(handlers::mcp::post_handler),
+        )
+        .route("/mcp", axum::routing::post(handlers::mcp::post_handler))
         .merge(Scalar::with_url("/scalar", ApiDoc::openapi()))
         .layer(
             CorsLayer::new()

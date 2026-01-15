@@ -129,7 +129,7 @@ pub async fn build_image(req: DockerBuildRequest) -> Result<String, String> {
     // Let's use Command for now as it's easier to implement "build from this directory".
     // Wait, `req.path` is local path.
 
-    use std::process::Command;
+    use tokio::process::Command;
 
     let full_tag = format!("{}:{}", req.image_name, req.version);
     let latest_tag = format!("{}:latest", req.image_name);
@@ -143,6 +143,7 @@ pub async fn build_image(req: DockerBuildRequest) -> Result<String, String> {
         .arg(".")
         .current_dir(&req.path)
         .output()
+        .await
         .map_err(|e| format!("Failed to execute docker build: {}", e))?;
 
     if output.status.success() {
@@ -345,13 +346,14 @@ pub async fn list_images() -> Result<Vec<DockerImage>, String> {
 }
 
 pub async fn prune_images() -> Result<String, String> {
-    use std::process::Command;
+    use tokio::process::Command;
 
     let output = Command::new("docker")
         .arg("image")
         .arg("prune")
         .arg("-f")
         .output()
+        .await
         .map_err(|e| format!("Failed to execute docker prune: {}", e))?;
 
     if output.status.success() {

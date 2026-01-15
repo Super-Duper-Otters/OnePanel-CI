@@ -2,7 +2,6 @@ use crate::models::{PushImageReq, Server};
 use crate::onepanel::OnePanelClient;
 use crate::AppState;
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
-use std::process::Command;
 
 #[utoipa::path(
     post,
@@ -33,12 +32,13 @@ pub async fn push_image_to_server_inner(
     // 2. Docker Save
     // Ensure docker is in path
     println!("Executing docker save -o {:?} {}", temp_path, image_tag);
-    let status = Command::new("docker")
+    let status = tokio::process::Command::new("docker")
         .arg("save")
         .arg("-o")
         .arg(&temp_path)
         .arg(image_tag)
-        .status()?;
+        .status()
+        .await?;
 
     if !status.success() {
         return Err(anyhow::anyhow!("docker save failed"));
