@@ -1,6 +1,6 @@
 [package]
 name = "OnePanel"
-version = "1.5.1"
+version = "1.5.2"
 edition = "2021"
 description = "OnePanel CI Application"
 repository = "https://github.com/Super-Duper-Otters/OnePanel-CI"
